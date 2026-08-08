@@ -1,0 +1,151 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+
+<div class="container py-4">
+
+```
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4 p-md-5">
+
+        <div class="text-center mb-5">
+            <h2 class="fw-bold" style="color:#0a192f;">
+                OEM Registration
+            </h2>
+
+            <p class="text-muted">
+                Register your organization with the Primexa Secure Exchange Network.
+            </p>
+        </div>
+
+        <form method="POST" class="django-form">
+            {% csrf_token %}
+
+            <!-- ACCOUNT -->
+            <div class="bg-light p-4 rounded-3 mb-4 border">
+
+                <h5 class="border-bottom pb-3 mb-4">
+                    1. Account & Secure Login
+                </h5>
+
+                {% for field in form %}
+                    {% if field.name != 'agree_to_terms' %}
+
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}"
+                                   class="form-label fw-semibold">
+                                {{ field.label }}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">
+                                    {{ field.help_text }}
+                                </div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    {% endif %}
+                {% endfor %}
+
+                <!-- TERMS CHECKBOX -->
+                <div class="mt-4 p-3 border rounded bg-white">
+
+                    <div class="form-check d-flex align-items-start gap-2">
+
+                        {{ form.agree_to_terms }}
+
+                        <label class="form-check-label"
+                               for="{{ form.agree_to_terms.id_for_label }}"
+                               style="line-height:1.5;">
+                            I agree to the Primexa Global
+                            <a href="{% url 'terms_conditions' %}"
+                               target="_blank"
+                               class="fw-semibold text-decoration-none"
+                               style="color:#0a6cff;">
+                                Terms & Conditions
+                            </a>
+                            and Confidentiality Policy.
+                        </label>
+
+                    </div>
+
+                    {% for error in form.agree_to_terms.errors %}
+                        <div class="text-danger small mt-2">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ORGANIZATION -->
+            <div class="bg-light p-4 rounded-3 mb-4 border">
+
+                <h5 class="border-bottom pb-3 mb-4">
+                    2. Organization & Industry Details
+                </h5>
+
+                {% for field in profile_form %}
+
+                    <div class="mb-3">
+
+                        <label for="{{ field.id_for_label }}"
+                               class="form-label fw-semibold">
+                            {{ field.label }}
+                        </label>
+
+                        {{ field }}
+
+                        {% if field.help_text %}
+                            <div class="form-text">
+                                {{ field.help_text }}
+                            </div>
+                        {% endif %}
+
+                        {% for error in field.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- SUBMIT -->
+            <div class="d-grid mt-4">
+
+                <button type="submit"
+                        class="btn btn-dark btn-lg py-3"
+                        style="
+                            font-weight:600;
+                            letter-spacing:1px;
+                            background-color:#0a192f;
+                        ">
+                    COMPLETE OEM REGISTRATION
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+```
+
+</div>
+
+{% endblock %}

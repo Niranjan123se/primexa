@@ -1,0 +1,187 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+
+<div class="container py-5">
+
+```
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h2 class="fw-bold mb-1">Engineering Control Center</h2>
+        <p class="text-muted mb-0">
+            Review requirements, control vendor access and manage sourcing.
+        </p>
+    </div>
+
+    <span class="badge bg-dark px-3 py-2">
+        PRIMEXA INTERNAL
+    </span>
+
+</div>
+
+
+{% if jobs %}
+
+<div class="card border-0 shadow-sm rounded-4">
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table align-middle mb-0">
+
+                <thead class="table-light">
+
+                    <tr>
+                        <th class="px-4">Requirement</th>
+                        <th>OEM</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                        <th class="text-end px-4">Actions</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for job in jobs %}
+
+                    <tr>
+
+                        <td class="px-4">
+
+                            <div class="fw-semibold">
+                                {{ job.title }}
+                            </div>
+
+                            <small class="text-muted">
+                                {{ job.tracking_number }}
+                            </small>
+
+                        </td>
+
+
+                        <td>
+
+                            <div class="fw-semibold">
+                                {{ job.uploaded_by.company_name|default:job.uploaded_by.username }}
+                            </div>
+
+                            <small class="text-muted">
+                                {{ job.uploaded_by.unique_id }}
+                            </small>
+
+                        </td>
+
+
+                        <td>
+                            {{ job.batch_quantity }}
+                        </td>
+
+
+                        <td>
+
+                            {% if job.status == "COMPLETED" %}
+
+                                <span class="badge bg-success">
+                                    {{ job.get_status_display }}
+                                </span>
+
+                            {% elif job.status == "REJECTED" %}
+
+                                <span class="badge bg-danger">
+                                    {{ job.get_status_display }}
+                                </span>
+
+                            {% elif job.status == "VENDOR_AWARDED" or job.status == "FINAL_VENDOR_ONBOARDED" %}
+
+                                <span class="badge bg-primary">
+                                    {{ job.get_status_display }}
+                                </span>
+
+                            {% elif job.status == "BID_PLACED" %}
+
+                                <span class="badge bg-warning text-dark">
+                                    {{ job.get_status_display }}
+                                </span>
+
+                            {% elif job.status == "PUBLISHED" %}
+
+                                <span class="badge bg-success">
+                                    Published
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+                                    {{ job.get_status_display }}
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td class="text-end px-4">
+
+                            <div class="d-flex justify-content-end gap-2">
+
+                                <a href="{% url 'review_workload' job.id %}"
+                                   class="btn btn-sm btn-outline-dark">
+                                    Review
+                                </a>
+
+
+                                {% if job.status == "BID_PLACED" or job.bids.exists %}
+
+                                <a href="{% url 'primexa_manage_bids' job.id %}"
+                                   class="btn btn-sm btn-dark"
+                                   style="background-color:#0a192f;">
+                                    Manage Bids
+                                </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% else %}
+
+<div class="card border-0 shadow-sm rounded-4">
+
+    <div class="card-body text-center py-5">
+
+        <h4 class="fw-bold mb-2">
+            No Requirements Found
+        </h4>
+
+        <p class="text-muted mb-0">
+            New OEM manufacturing requirements will appear here.
+        </p>
+
+    </div>
+
+</div>
+
+{% endif %}
+```
+
+</div>
+
+{% endblock %}

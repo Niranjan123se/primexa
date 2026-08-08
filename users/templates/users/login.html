@@ -1,0 +1,17 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+<div class="card shadow p-4 mx-auto mt-5" style="max-width: 400px;">
+    <h3 class="text-center mb-4">Login to Primexa</h3>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+    <div class="text-center mt-3">
+        <p>Don't have an account?</p>
+        <a href="{% url 'register_oem' %}" class="btn btn-sm btn-outline-secondary">Register OEM</a>
+        <a href="{% url 'register_vendor' %}" class="btn btn-sm btn-outline-secondary">Register Vendor</a>
+    </div>
+</div>
+{% endblock %}

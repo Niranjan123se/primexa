@@ -1,0 +1,95 @@
+{% extends 'users/base.html' %}
+{% block content %}
+<div class="card shadow p-4 mt-4">
+    <h2>Welcome, {{ user.username }}</h2>
+    
+    {% if role == 'ENGINEER' %}
+        <hr>
+        <h4 class="text-warning">Pending OEM Uploads (Needs Review)</h4>
+        <ul class="list-group mb-5">
+        {% for file in pending_files %}
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>{{ file.title }} (From: {{ file.uploaded_by.username }})</strong>
+                    <a href="{% url 'review_workload' file.id %}" class="btn btn-sm btn-warning">Review & Publish</a>
+                </div>
+                <p class="text-muted mt-2 mb-0">{{ file.description }}</p>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">No pending workloads.</li>
+        {% endfor %}
+        </ul>
+
+        <h4 class="text-success">Currently Published to Vendors</h4>
+        <ul class="list-group">
+        {% for file in published_files %}
+            <li class="list-group-item list-group-item-success">
+                <strong>{{ file.title }}</strong>
+                <p class="text-muted mt-1 mb-0">{{ file.description }}</p>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">No published files.</li>
+        {% endfor %}
+        </ul>
+
+    {% elif role == 'OEM' %}
+        <hr>
+        <h4>Upload a new Requirement</h4>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit Requirement to Primexa</button>
+        </form>
+        <h4 class="mt-5">My Submitted Requirements</h4>
+        <ul class="list-group">
+        {% for file in my_files %}
+            <li class="list-group-item">
+                <strong>{{ file.title }}</strong> - Status: <strong>{{ file.status }}</strong>
+                <p class="text-muted mt-1 mb-2">{{ file.description }}</p>
+                {% if file.file %}
+                    <a href="{% url 'download_file' file.id %}" class="btn btn-sm btn-outline-primary">Download My File</a>
+                {% endif %}
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">No requirements submitted yet.</li>
+        {% endfor %}
+        </ul>
+
+    {% elif role == 'VENDOR' %}
+        <hr>
+        <h4 class="text-primary">Available Workloads Exchange</h4>
+        <ul class="list-group mb-5">
+        {% for file in available_files %}
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>{{ file.title }}</strong>
+                    <a href="{% url 'sign_nda' file.id %}" class="btn btn-sm btn-success">Sign NDA & Request</a>
+                </div>
+                <p class="text-muted mt-2 mb-0">{{ file.description }}</p>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">No new available workloads.</li>
+        {% endfor %}
+        </ul>
+
+        <h4 class="text-success">My Accepted Workloads</h4>
+        <ul class="list-group">
+        {% for file in accepted_files %}
+            <li class="list-group-item list-group-item-success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong>{{ file.title }}</strong>
+                    {% if file.file %}
+                        <a href="{% url 'download_file' file.id %}" class="btn btn-sm btn-dark">Secure Download CAD</a>
+                    {% else %}
+                        <span class="badge bg-secondary">Text Requirement Only</span>
+                    {% endif %}
+                </div>
+                <p class="text-dark mt-2 mb-0">{{ file.description }}</p>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">You haven't accepted any workloads yet.</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+</div>
+{% endblock %}

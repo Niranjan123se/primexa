@@ -1,0 +1,236 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+
+<div class="container py-5">
+
+```
+<div class="row justify-content-center">
+
+    <div class="col-lg-9">
+
+        <div class="mb-4">
+            <h2 class="fw-bold mb-1">Create Manufacturing Requirement</h2>
+            <p class="text-muted mb-0">
+                Submit your technical and commercial requirement securely to Primexa.
+            </p>
+        </div>
+
+
+        <div class="card border-0 shadow-sm rounded-4">
+
+            <div class="card-body p-4 p-lg-5">
+
+                <form method="POST" enctype="multipart/form-data">
+
+                    {% csrf_token %}
+
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+
+                    <h5 class="fw-bold border-bottom pb-3 mb-4">
+                        Requirement Details
+                    </h5>
+
+
+                    <div class="mb-4">
+
+                        <label class="form-label fw-semibold">
+                            Requirement Title
+                        </label>
+
+                        {{ form.title }}
+
+                        {% if form.title.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.title.errors }}
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="mb-4">
+
+                        <label class="form-label fw-semibold">
+                            Description
+                        </label>
+
+                        {{ form.description }}
+
+                        {% if form.description.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="mb-4">
+
+                        <label class="form-label fw-semibold">
+                            Technical File / CAD Drawing
+                        </label>
+
+                        {{ form.file }}
+
+                        {% if form.file.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.file.errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="form-text">
+                            Upload the required drawing, CAD model, PDF or approved technical package.
+                        </div>
+
+                    </div>
+
+
+                    <h5 class="fw-bold border-bottom pb-3 mb-4 mt-5">
+                        Manufacturing Requirement
+                    </h5>
+
+
+                    <div class="row g-4">
+
+                        <div class="col-md-6">
+
+                            <label class="form-label fw-semibold">
+                                Job Category
+                            </label>
+
+                            {{ form.job_category }}
+
+                            {% if form.job_category.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.job_category.errors }}
+                            </div>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="col-md-6">
+
+                            <label class="form-label fw-semibold">
+                                Work Nature
+                            </label>
+
+                            {{ form.work_nature }}
+
+                            {% if form.work_nature.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.work_nature.errors }}
+                            </div>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="col-md-6">
+
+                            <label class="form-label fw-semibold">
+                                Batch Quantity
+                            </label>
+
+                            {{ form.batch_quantity }}
+
+                            {% if form.batch_quantity.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.batch_quantity.errors }}
+                            </div>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="col-md-6">
+
+                            <label class="form-label fw-semibold">
+                                Target Price Per Piece (INR)
+                            </label>
+
+                            {{ form.target_price }}
+
+                            {% if form.target_price.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.target_price.errors }}
+                            </div>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mb-4 mt-4">
+
+                        <label class="form-label fw-semibold">
+                            Vendor Qualifications Required
+                        </label>
+
+                        {{ form.vendor_qualifications_required }}
+
+                        {% if form.vendor_qualifications_required.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.vendor_qualifications_required.errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="form-text">
+                            Example: ISO 9001, CMM inspection, CNC capability, specific material experience.
+                        </div>
+
+                    </div>
+
+
+                    <div class="alert alert-light border rounded-3 mt-5">
+
+                        <div class="fw-semibold mb-1">
+                            Secure Primexa Submission
+                        </div>
+
+                        <small class="text-muted">
+                            Your technical files and commercial requirements are
+                            submitted through the Primexa Secure Exchange workflow.
+                        </small>
+
+                    </div>
+
+
+                    <div class="d-flex justify-content-between align-items-center gap-3 mt-4">
+
+                        <a href="{% url 'oem_dashboard' %}"
+                           class="btn btn-outline-secondary px-4">
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                                class="btn btn-dark px-5 py-3"
+                                style="background-color:#0a192f;">
+                            Submit Requirement
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+{% endblock %}
