@@ -4,59 +4,78 @@
 
 <div class="container py-5">
 
-```
-<div class="row justify-content-center">
+    <!-- ====================================================== -->
+    <!-- HEADER -->
+    <!-- ====================================================== -->
 
-    <div class="col-lg-9">
+    <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
 
-            <div>
-                <h2 class="fw-bold mb-1">Engineering Review</h2>
-                <p class="text-muted mb-0">
-                    Review and control the manufacturing requirement before vendor release.
-                </p>
-            </div>
+            <a
+                href="{% url 'engineer_dashboard' %}"
+                class="btn btn-sm btn-outline-secondary mb-3"
+            >
+                ← Engineering Dashboard
+            </a>
 
-            <span class="badge bg-dark px-3 py-2">
-                PRIMEXA ENGINEERING
-            </span>
+            <h2 class="fw-bold mb-1">
+                Engineering Requirement Review
+            </h2>
+
+            <p class="text-muted mb-0">
+                Review the OEM requirement and define the complete
+                manufacturing route before vendor release.
+            </p>
 
         </div>
 
+        <span class="badge bg-dark px-3 py-2">
+            PRIMEXA ENGINEERING
+        </span>
 
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
+    </div>
 
-            <div class="card-body p-4">
 
-                <div class="row g-4">
+    <!-- ====================================================== -->
+    <!-- REQUIREMENT -->
+    <!-- ====================================================== -->
 
-                    <div class="col-md-8">
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
 
-                        <small class="text-muted">
-                            TRACKING NUMBER
-                        </small>
+        <div class="card-body p-4">
 
-                        <div class="fw-bold mb-3">
-                            {{ cad_file.tracking_number }}
-                        </div>
+            <div class="row g-4">
 
-                        <h4 class="fw-bold mb-2">
-                            {{ cad_file.title }}
-                        </h4>
+                <div class="col-lg-7">
 
-                        <p class="text-muted mb-0">
-                            {{ cad_file.description|default:"No description provided." }}
-                        </p>
+                    <small class="text-muted">
+                        TRACKING NUMBER
+                    </small>
 
+                    <div class="fw-bold mb-3">
+                        {{ cad_file.tracking_number }}
                     </div>
 
+                    <h4 class="fw-bold mb-2">
+                        {{ cad_file.title }}
+                    </h4>
 
-                    <div class="col-md-4">
+                    <p class="text-muted mb-0">
+                        {{ cad_file.description|default:"No description provided." }}
+                    </p>
 
-                        <div class="bg-light rounded-4 p-3">
+                </div>
 
-                            <div class="mb-2">
+
+                <div class="col-lg-5">
+
+                    <div class="bg-light rounded-4 p-3">
+
+                        <div class="row g-3">
+
+                            <div class="col-6">
+
                                 <small class="text-muted">
                                     OEM
                                 </small>
@@ -64,26 +83,46 @@
                                 <div class="fw-semibold">
                                     {{ cad_file.uploaded_by.company_name|default:cad_file.uploaded_by.username }}
                                 </div>
+
                             </div>
 
-                            <div class="mb-2">
+
+                            <div class="col-6">
+
                                 <small class="text-muted">
-                                    Quantity
+                                    QUANTITY
                                 </small>
 
                                 <div class="fw-semibold">
                                     {{ cad_file.batch_quantity }}
                                 </div>
+
                             </div>
 
-                            <div>
+
+                            <div class="col-6">
+
                                 <small class="text-muted">
-                                    Current Status
+                                    REQUIREMENT STATUS
                                 </small>
 
                                 <div class="fw-semibold">
                                     {{ cad_file.get_status_display }}
                                 </div>
+
+                            </div>
+
+
+                            <div class="col-6">
+
+                                <small class="text-muted">
+                                    PLAN STEPS
+                                </small>
+
+                                <div class="fw-bold fs-5">
+                                    {{ processes|length }}
+                                </div>
+
                             </div>
 
                         </div>
@@ -96,126 +135,40 @@
 
         </div>
 
-
-        <div class="card border-0 shadow-sm rounded-4">
-
-            <div class="card-body p-4 p-lg-5">
-
-                <h5 class="fw-bold border-bottom pb-3 mb-4">
-                    Engineering Decision
-                </h5>
+    </div>
 
 
-                <form method="POST" enctype="multipart/form-data">
+    <!-- ====================================================== -->
+    <!-- TECHNICAL FILE -->
+    <!-- ====================================================== -->
 
-                    {% csrf_token %}
+    {% if cad_file.file %}
 
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
 
-                    {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {{ form.non_field_errors }}
-                    </div>
-                    {% endif %}
+        <div class="card-body p-4">
 
+            <div class="d-flex justify-content-between align-items-center">
 
-                    <div class="mb-4">
+                <div>
 
-                        <label class="form-label fw-semibold">
-                            Requirement Status
-                        </label>
-
-                        {{ form.status }}
-
-                        {% if form.status.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ form.status.errors }}
-                        </div>
-                        {% endif %}
-
+                    <div class="fw-bold">
+                        OEM Technical Drawing
                     </div>
 
-
-                    <div class="mb-4">
-
-                        <label class="form-label fw-semibold">
-                            Expected Delivery Date
-                        </label>
-
-                        {{ form.expected_delivery_date }}
-
-                        {% if form.expected_delivery_date.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ form.expected_delivery_date.errors }}
-                        </div>
-                        {% endif %}
-
+                    <div class="small text-muted">
+                        Protected technical document supplied by the OEM.
                     </div>
 
-
-                    <div class="mb-4">
-
-                        <label class="form-label fw-semibold">
-                            FAI / Engineering Remarks
-                        </label>
-
-                        {{ form.fai_remarks }}
-
-                        {% if form.fai_remarks.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ form.fai_remarks.errors }}
-                        </div>
-                        {% endif %}
-
-                        <div class="form-text">
-                            Add inspection observations, technical comments,
-                            rejection reasons or approval remarks where applicable.
-                        </div>
-
-                    </div>
+                </div>
 
 
-                    {% if cad_file.file %}
-
-                    <div class="alert alert-light border rounded-3 mb-4">
-
-                        <div class="fw-semibold mb-1">
-                            Technical File Available
-                        </div>
-
-                        <small class="text-muted">
-                            The requirement contains a protected technical file.
-                        </small>
-
-                        <div class="mt-3">
-
-                            <a href="{% url 'download_file' cad_file.id %}"
-                               class="btn btn-sm btn-outline-dark">
-                                Download Technical File
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                    {% endif %}
-
-
-                    <div class="d-flex justify-content-between align-items-center gap-3">
-
-                        <a href="{% url 'engineer_dashboard' %}"
-                           class="btn btn-outline-secondary px-4">
-                            Cancel
-                        </a>
-
-                        <button type="submit"
-                                class="btn btn-dark px-5 py-2"
-                                style="background-color:#0a192f;">
-                            Save Engineering Decision
-                        </button>
-
-                    </div>
-
-                </form>
+                <a
+                    href="{% url 'download_file' cad_file.id %}"
+                    class="btn btn-sm btn-outline-dark"
+                >
+                    Download Technical File
+                </a>
 
             </div>
 
@@ -223,8 +176,743 @@
 
     </div>
 
-</div>
-```
+    {% endif %}
+
+
+    <!-- ====================================================== -->
+    <!-- PUBLISH ERROR -->
+    <!-- ====================================================== -->
+
+    {% if publish_error %}
+
+    <div class="alert alert-danger rounded-4 border-0 shadow-sm">
+
+        <strong>
+            Cannot publish requirement
+        </strong>
+
+        <div class="small mt-1">
+            {{ publish_error }}
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ====================================================== -->
+    <!-- ENGINEERING NOTES -->
+    <!-- ====================================================== -->
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+        <div class="card-body p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Engineering Assessment
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+                        Add technical observations before defining
+                        the manufacturing route.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <form
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                {% csrf_token %}
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="save_review"
+                >
+
+
+                {% if form.non_field_errors %}
+
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+
+                {% endif %}
+
+
+                {% for field in form %}
+
+                <div class="mb-3">
+
+                    <label class="form-label fw-semibold">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+
+                    <div class="form-text">
+                        {{ field.help_text }}
+                    </div>
+
+                    {% endif %}
+
+                    {% if field.errors %}
+
+                    <div class="text-danger small mt-1">
+                        {{ field.errors }}
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+                {% endfor %}
+
+
+                <button
+                    type="submit"
+                    class="btn btn-outline-dark"
+                >
+                    Save Engineering Notes
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ====================================================== -->
+    <!-- MANUFACTURING ROUTE -->
+    <!-- ====================================================== -->
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+        <div class="card-body p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-1">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+                        Manufacturing Route
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+                        Define the exact operations required to manufacture
+                        the OEM part.
+                    </p>
+
+                </div>
+
+                <span class="badge bg-dark">
+                    ENGINEERING CONTROLLED
+                </span>
+
+            </div>
+
+
+            <hr class="my-4">
+
+
+            {% for process in processes %}
+
+            <div class="border rounded-4 p-4 mb-3">
+
+                <div class="d-flex justify-content-between align-items-start">
+
+                    <div class="d-flex gap-3">
+
+                        <div
+                            class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
+                            style="width:44px;height:44px;min-width:44px;"
+                        >
+                            {{ process.sequence }}
+                        </div>
+
+
+                        <div>
+
+                            <div class="fw-bold fs-5">
+
+                                {% if process.process_name %}
+
+                                    {{ process.process_name }}
+
+                                {% else %}
+
+                                    {{ process.get_process_type_display }}
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <div class="small text-muted">
+                                {{ process.get_process_type_display }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {% if not plan_locked %}
+
+                    <form
+                        method="POST"
+                        action="{% url 'delete_engineering_process' process.id %}"
+                        onsubmit="return confirm('Remove this manufacturing operation?');"
+                    >
+
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="btn btn-sm btn-outline-danger"
+                        >
+                            Remove
+                        </button>
+
+                    </form>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="row g-3 mt-2">
+
+                    <div class="col-md-3">
+
+                        <small class="text-muted d-block">
+                            Quantity
+                        </small>
+
+                        <strong>
+                            {{ process.quantity }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="col-md-3">
+
+                        <small class="text-muted d-block">
+                            Machine
+                        </small>
+
+                        <strong>
+                            {{ process.machine_requirement|default:"Not specified" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="col-md-3">
+
+                        <small class="text-muted d-block">
+                            Tolerance
+                        </small>
+
+                        <strong>
+                            {{ process.tolerance_requirement|default:"Not specified" }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="col-md-3">
+
+                        <small class="text-muted d-block">
+                            Duration
+                        </small>
+
+                        <strong>
+
+                            {% if process.estimated_process_days %}
+
+                                {{ process.estimated_process_days }}
+                                day{{ process.estimated_process_days|pluralize }}
+
+                            {% else %}
+
+                                Not specified
+
+                            {% endif %}
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                {% if process.material_required %}
+
+                <div class="mt-3">
+
+                    <small class="text-muted">
+                        Material
+                    </small>
+
+                    <div>
+                        {{ process.material_description|default:"Material required" }}
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if process.technical_specification %}
+
+                <div class="mt-3">
+
+                    <small class="text-muted">
+                        Technical Specification
+                    </small>
+
+                    <div>
+                        {{ process.technical_specification|linebreaksbr }}
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if process.surface_finish_requirement %}
+
+                <div class="mt-3">
+
+                    <small class="text-muted">
+                        Surface Finish
+                    </small>
+
+                    <div>
+                        {{ process.surface_finish_requirement }}
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if process.drawing_reference %}
+
+                <div class="mt-3">
+
+                    <small class="text-muted">
+                        Drawing Reference
+                    </small>
+
+                    <div>
+                        {{ process.drawing_reference }}
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+                <div class="mt-3">
+
+                    {% if process.is_mandatory %}
+
+                    <span class="badge bg-dark">
+                        Mandatory
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge bg-secondary">
+                        Optional
+                    </span>
+
+                    {% endif %}
+
+
+                    {% if process.is_outsourcable %}
+
+                    <span class="badge bg-light text-dark border">
+                        Outsourcing Allowed
+                    </span>
+
+                    {% else %}
+
+                    <span class="badge bg-warning text-dark">
+                        In-house Only
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            {% empty %}
+
+            <div class="text-center py-5">
+
+                <div
+                    class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                    style="width:64px;height:64px;"
+                >
+                    ⚙
+                </div>
+
+                <h5 class="fw-bold">
+                    No Manufacturing Operations Yet
+                </h5>
+
+                <p class="text-muted mb-0">
+                    Add the operations required to manufacture this part.
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ====================================================== -->
+    <!-- ADD OPERATION -->
+    <!-- ====================================================== -->
+
+    {% if not plan_locked %}
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+        <div class="card-body p-4">
+
+            <h5 class="fw-bold mb-1">
+                Add Manufacturing Operation
+            </h5>
+
+            <p class="text-muted small mb-4">
+                Define one operation in the manufacturing route.
+            </p>
+
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="add_process"
+                >
+
+
+                {% if process_form.non_field_errors %}
+
+                <div class="alert alert-danger">
+                    {{ process_form.non_field_errors }}
+                </div>
+
+                {% endif %}
+
+
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+
+                        <label class="form-label fw-semibold">
+                            Sequence
+                        </label>
+
+                        {{ process_form.sequence }}
+
+                        {{ process_form.sequence.errors }}
+
+                    </div>
+
+
+                    <div class="col-md-5">
+
+                        <label class="form-label fw-semibold">
+                            Process Type
+                        </label>
+
+                        {{ process_form.process_type }}
+
+                        {{ process_form.process_type.errors }}
+
+                    </div>
+
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-semibold">
+                            Process Name
+                        </label>
+
+                        {{ process_form.process_name }}
+
+                        {{ process_form.process_name.errors }}
+
+                    </div>
+
+
+                    <div class="col-md-3">
+
+                        <label class="form-label fw-semibold">
+                            Quantity
+                        </label>
+
+                        {{ process_form.quantity }}
+
+                    </div>
+
+
+                    <div class="col-md-9">
+
+                        <label class="form-label fw-semibold">
+                            Machine Requirement
+                        </label>
+
+                        {{ process_form.machine_requirement }}
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Material Description
+                        </label>
+
+                        {{ process_form.material_description }}
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Drawing Reference
+                        </label>
+
+                        {{ process_form.drawing_reference }}
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Technical Specification
+                        </label>
+
+                        {{ process_form.technical_specification }}
+
+                    </div>
+
+
+                    <div class="col-md-3">
+
+                        <label class="form-label fw-semibold">
+                            Tolerance
+                        </label>
+
+                        {{ process_form.tolerance_requirement }}
+
+                    </div>
+
+
+                    <div class="col-md-3">
+
+                        <label class="form-label fw-semibold">
+                            Surface Finish
+                        </label>
+
+                        {{ process_form.surface_finish_requirement }}
+
+                    </div>
+
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-semibold">
+                            Estimated Process Days
+                        </label>
+
+                        {{ process_form.estimated_process_days }}
+
+                    </div>
+
+
+                    <div class="col-md-4 d-flex align-items-end">
+
+                        <div class="form-check mb-2">
+
+                            {{ process_form.material_required }}
+
+                            <label class="form-check-label">
+                                Material Required
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-4 d-flex align-items-end">
+
+                        <div class="form-check mb-2">
+
+                            {{ process_form.is_mandatory }}
+
+                            <label class="form-check-label">
+                                Mandatory Operation
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-4">
+
+                        <div class="form-check">
+
+                            {{ process_form.is_outsourcable }}
+
+                            <label class="form-check-label">
+                                Outsourcing Allowed
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-12">
+
+                        <label class="form-label fw-semibold">
+                            Engineering Notes
+                        </label>
+
+                        {{ process_form.notes }}
+
+                    </div>
+
+                </div>
+
+
+                <div class="mt-4">
+
+                    <button
+                        type="submit"
+                        class="btn btn-dark px-4"
+                        style="background-color:#0a192f;"
+                    >
+                        + Add Operation
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- ====================================================== -->
+    <!-- PUBLISH -->
+    <!-- ====================================================== -->
+
+    <div class="card border-0 shadow-sm rounded-4">
+
+        <div class="card-body p-4">
+
+            {% if plan_locked %}
+
+            <div class="alert alert-success mb-0">
+
+                <div class="fw-bold">
+                    Requirement Published to Vendors
+                </div>
+
+                <div class="small mt-1">
+                    The approved manufacturing route has been released
+                    for vendor capability matching.
+                </div>
+
+            </div>
+
+            {% else %}
+
+            <div class="row align-items-center">
+
+                <div class="col-lg-8">
+
+                    <h5 class="fw-bold mb-1">
+                        Ready to Release?
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+                        Publishing will make this requirement available
+                        to vendors whose capabilities match the engineering-defined
+                        manufacturing route.
+                    </p>
+
+                </div>
+
+
+                <div class="col-lg-4 mt-3 mt-lg-0">
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+                        <input
+                            type="hidden"
+                            name="action"
+                            value="publish"
+                        >
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100 py-3"
+                            {% if not processes %}disabled{% endif %}
+                        >
+                            Publish to Vendors
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
 
 </div>
 

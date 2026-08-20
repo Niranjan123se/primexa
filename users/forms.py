@@ -1,55 +1,71 @@
-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.utils import timezone
 
-from .models import User, VendorProfile, OEMProfile
+from .models import (
+    User,
+    VendorProfile,
+    OEMProfile,
+)
 
+
+# ==========================================================
+# OEM REGISTRATION
+# ==========================================================
 
 class OEMRegistrationForm(UserCreationForm):
+
     company_name = forms.CharField(
         max_length=255,
         required=True,
-        label="Company Name"
+        label="Company Name",
     )
 
     phone_number = forms.CharField(
         max_length=20,
         required=True,
-        label="Phone Number"
+        label="Phone Number",
     )
 
     agree_to_terms = forms.BooleanField(
         required=True,
-        label="I agree to the Primexa Global Terms & Conditions and Confidentiality Policy."
+        label=(
+            "I agree to the Primexa Global Terms & Conditions "
+            "and Confidentiality Policy."
+        ),
     )
 
     class Meta(UserCreationForm.Meta):
         model = User
         fields = (
-            'username',
-            'email',
-            'company_name',
-            'phone_number',
+            "username",
+            "email",
+            "company_name",
+            "phone_number",
         )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control bg-light border-0 shadow-sm'
+        for field in self.fields.values():
+            field.widget.attrs["class"] = (
+                "form-control bg-light border-0 shadow-sm"
+            )
 
-        # Proper checkbox styling
-        self.fields['agree_to_terms'].widget.attrs['class'] = 'form-check-input'
-        self.fields['agree_to_terms'].widget.attrs['style'] = 'width: 18px; height: 18px;'
+        self.fields["agree_to_terms"].widget.attrs["class"] = (
+            "form-check-input"
+        )
 
+        self.fields["agree_to_terms"].widget.attrs["style"] = (
+            "width: 18px; height: 18px;"
+        )
 
     def save(self, commit=True):
         user = super().save(commit=False)
 
-        user.role = 'OEM'
-        user.company_name = self.cleaned_data['company_name']
-        user.phone_number = self.cleaned_data['phone_number']
+        user.role = "OEM"
+        user.company_name = self.cleaned_data["company_name"]
+        user.phone_number = self.cleaned_data["phone_number"]
         user.accepted_terms_date = timezone.now()
 
         if commit:
@@ -58,80 +74,171 @@ class OEMRegistrationForm(UserCreationForm):
         return user
 
 
+# ==========================================================
+# VENDOR REGISTRATION
+# ==========================================================
+
 class VendorRegistrationForm(UserCreationForm):
 
     company_name = forms.CharField(
         max_length=255,
         required=True,
-        label="Company Name"
+        label="Company Name",
     )
 
     phone_number = forms.CharField(
         max_length=20,
         required=True,
-        label="Phone Number"
+        label="Phone Number",
     )
 
     class Meta(UserCreationForm.Meta):
         model = User
         fields = (
-            'username',
-            'email',
-            'company_name',
-            'phone_number',
+            "username",
+            "email",
+            "company_name",
+            "phone_number",
         )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control bg-light border-0 shadow-sm'
+        for field in self.fields.values():
+            field.widget.attrs["class"] = (
+                "form-control bg-light border-0 shadow-sm"
+            )
 
+
+# ==========================================================
+# USER ACCOUNT / PROFILE FORM
+# ==========================================================
+
+class UserProfileForm(forms.ModelForm):
+    """
+    Allows the logged-in user to edit their own basic account
+    information.
+
+    Username and role are intentionally NOT editable.
+    """
+
+    class Meta:
+        model = User
+
+        fields = [
+            "email",
+            "company_name",
+            "phone_number",
+        ]
+
+        labels = {
+            "email": "Email Address",
+            "company_name": "Company Name",
+            "phone_number": "Phone Number",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for field in self.fields.values():
+            field.widget.attrs["class"] = (
+                "form-control bg-light border-0 shadow-sm"
+            )
+
+
+# ==========================================================
+# VENDOR PROFILE
+# ==========================================================
 
 class VendorProfileForm(forms.ModelForm):
 
     class Meta:
         model = VendorProfile
-        exclude = ['user']
+
+        exclude = [
+            "user",
+            "vendor_id_code",
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        for field_name, field in self.fields.items():
+        for field in self.fields.values():
 
-            if isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs['class'] = 'form-check-input'
-                field.widget.attrs['style'] = 'width: 18px; height: 18px;'
+            if isinstance(
+                field.widget,
+                forms.CheckboxInput,
+            ):
+                field.widget.attrs["class"] = (
+                    "form-check-input"
+                )
 
-            elif isinstance(field.widget, forms.Select):
-                field.widget.attrs['class'] = 'form-select bg-light border-0 shadow-sm'
+                field.widget.attrs["style"] = (
+                    "width: 18px; height: 18px;"
+                )
 
-            elif isinstance(field.widget, forms.FileInput):
-                field.widget.attrs['class'] = 'form-control bg-light border-0 shadow-sm'
+            elif isinstance(
+                field.widget,
+                forms.Select,
+            ):
+                field.widget.attrs["class"] = (
+                    "form-select bg-light border-0 shadow-sm"
+                )
+
+            elif isinstance(
+                field.widget,
+                forms.FileInput,
+            ):
+                field.widget.attrs["class"] = (
+                    "form-control bg-light border-0 shadow-sm"
+                )
 
             else:
-                field.widget.attrs['class'] = 'form-control bg-light border-0 shadow-sm'
+                field.widget.attrs["class"] = (
+                    "form-control bg-light border-0 shadow-sm"
+                )
 
-            if isinstance(field.widget, forms.Textarea):
-                field.widget.attrs['rows'] = 3
+            if isinstance(
+                field.widget,
+                forms.Textarea,
+            ):
+                field.widget.attrs["rows"] = 3
 
+
+# ==========================================================
+# OEM PROFILE
+# ==========================================================
 
 class OEMProfileForm(forms.ModelForm):
 
     class Meta:
         model = OEMProfile
-        exclude = ['user']
+
+        exclude = [
+            "user",
+            "oem_id_code",
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        for field_name, field in self.fields.items():
+        for field in self.fields.values():
 
-            if isinstance(field.widget, forms.Select):
-                field.widget.attrs['class'] = 'form-select bg-light border-0 shadow-sm'
+            if isinstance(
+                field.widget,
+                forms.Select,
+            ):
+                field.widget.attrs["class"] = (
+                    "form-select bg-light border-0 shadow-sm"
+                )
+
             else:
-                field.widget.attrs['class'] = 'form-control bg-light border-0 shadow-sm'
+                field.widget.attrs["class"] = (
+                    "form-control bg-light border-0 shadow-sm"
+                )
 
-            if isinstance(field.widget, forms.Textarea):
-                field.widget.attrs['rows'] = 3
-
+            if isinstance(
+                field.widget,
+                forms.Textarea,
+            ):
+                field.widget.attrs["rows"] = 3

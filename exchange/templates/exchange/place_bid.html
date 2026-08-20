@@ -4,183 +4,470 @@
 
 <div class="container py-5">
 
-```
-<div class="row justify-content-center">
+    <div class="row justify-content-center">
 
-    <div class="col-lg-8">
+        <div class="col-lg-8">
 
-        <div class="mb-4">
-            <h2 class="fw-bold mb-1">Submit Confidential Bid</h2>
-            <p class="text-muted mb-0">
-                Submit your manufacturing quotation for this Primexa requirement.
-            </p>
-        </div>
+            <!-- ================================================= -->
+            <!-- PAGE HEADER -->
+            <!-- ================================================= -->
 
+            <div class="mb-4">
 
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                {% if is_editing %}
 
-            <div class="card-body p-4">
+                    <h2 class="fw-bold mb-1">
+                        Modify Your Bid
+                    </h2>
 
-                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <p class="text-muted mb-0">
+                        Update your commercial proposal for this Primexa requirement.
+                    </p>
 
-                    <div>
-                        <small class="text-muted">
-                            TRACKING NUMBER
-                        </small>
+                {% else %}
 
-                        <div class="fw-bold">
-                            {{ cad_file.tracking_number }}
-                        </div>
-                    </div>
+                    <h2 class="fw-bold mb-1">
+                        Submit Confidential Bid
+                    </h2>
 
-                    <span class="badge bg-success px-3 py-2">
-                        NDA ACCEPTED
-                    </span>
+                    <p class="text-muted mb-0">
+                        Submit your manufacturing quotation for this Primexa requirement.
+                    </p>
 
-                </div>
-
-                <h4 class="fw-bold">
-                    {{ cad_file.title }}
-                </h4>
-
-                <p class="text-muted mb-0">
-                    {{ cad_file.description|default:"No additional description provided." }}
-                </p>
+                {% endif %}
 
             </div>
 
-        </div>
 
+            <!-- ================================================= -->
+            <!-- REQUIREMENT SUMMARY -->
+            <!-- ================================================= -->
 
-        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
 
-            <div class="card-body p-4 p-lg-5">
+                <div class="card-body p-4">
 
-                <h5 class="fw-bold border-bottom pb-3 mb-4">
-                    Your Manufacturing Proposal
-                </h5>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
 
+                        <div>
 
-                <form method="POST">
+                            <small class="text-muted">
+                                TRACKING NUMBER
+                            </small>
 
-                    {% csrf_token %}
+                            <div class="fw-bold">
+                                {{ cad_file.tracking_number }}
+                            </div>
 
-
-                    {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {{ form.non_field_errors }}
-                    </div>
-                    {% endif %}
-
-
-                    <div class="mb-4">
-
-                        <label class="form-label fw-semibold">
-                            Offered Price (INR)
-                        </label>
-
-                        {{ form.offered_price }}
-
-                        {% if form.offered_price.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ form.offered_price.errors }}
-                        </div>
-                        {% endif %}
-
-                        <div class="form-text">
-                            Enter your manufacturing quotation in INR.
                         </div>
 
-                    </div>
 
+                        {% if is_editing %}
 
-                    <div class="mb-4">
-
-                        <label class="form-label fw-semibold">
-                            Estimated Delivery Time
-                        </label>
-
-                        <div class="input-group">
-
-                            {{ form.delivery_days }}
-
-                            <span class="input-group-text">
-                                Days
+                            <span class="badge bg-warning text-dark px-3 py-2">
+                                EXISTING BID
                             </span>
 
-                        </div>
+                        {% else %}
 
-                        {% if form.delivery_days.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ form.delivery_days.errors }}
-                        </div>
+                            <span class="badge bg-success px-3 py-2">
+                                NDA ACCEPTED
+                            </span>
+
                         {% endif %}
 
                     </div>
 
 
-                    <div class="mb-4">
-
-                        <label class="form-label fw-semibold">
-                            Proposal Notes
-                        </label>
-
-                        {{ form.proposal_notes }}
-
-                        {% if form.proposal_notes.errors %}
-                        <div class="text-danger small mt-1">
-                            {{ form.proposal_notes.errors }}
-                        </div>
-                        {% endif %}
-
-                        <div class="form-text">
-                            Mention material availability, machine capability,
-                            inspection capability, tooling requirements or other
-                            relevant manufacturing information.
-                        </div>
-
-                    </div>
+                    <h4 class="fw-bold">
+                        {{ cad_file.title }}
+                    </h4>
 
 
-                    <div class="alert alert-light border rounded-3 mb-4">
+                    <p class="text-muted mb-0">
+                        {{ cad_file.description|default:"No additional description provided." }}
+                    </p>
 
-                        <div class="fw-semibold mb-1">
-                            Confidential Commercial Submission
-                        </div>
+                </div>
 
-                        <small class="text-muted">
-                            Your quotation is submitted to Primexa for evaluation.
-                            Vendor pricing is not disclosed to other vendors.
-                        </small>
+            </div>
 
-                    </div>
 
+            <!-- ================================================= -->
+            <!-- PROTECTED TECHNICAL DOCUMENT -->
+            <!-- ================================================= -->
+
+            {% if cad_file.file %}
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+                <div class="card-body p-4">
 
                     <div class="d-flex justify-content-between align-items-center gap-3">
 
-                        <a href="{% url 'vendor_dashboard' %}"
-                           class="btn btn-outline-secondary px-4">
-                            Cancel
-                        </a>
+                        <div class="d-flex align-items-center gap-3">
 
-                        <button type="submit"
-                                class="btn btn-dark px-5 py-2"
-                                style="background-color:#0a192f;">
-                            Submit Confidential Bid
-                        </button>
+                            <div
+                                class="rounded-3 bg-light border d-flex align-items-center justify-content-center"
+                                style="width:52px;height:52px;"
+                            >
+                                <span style="font-size:24px;">
+                                    📄
+                                </span>
+                            </div>
+
+
+                            <div>
+
+                                <div class="fw-bold">
+                                    Technical Drawing / CAD Document
+                                </div>
+
+                                <div class="small text-muted">
+                                    OEM engineering document for manufacturing evaluation.
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <a
+                            href="{% url 'download_file' cad_file.id %}"
+                            class="btn btn-outline-dark"
+                        >
+                            View Technical Document
+                        </a>
 
                     </div>
 
-                </form>
+
+                    <div class="alert alert-light border rounded-3 mt-4 mb-0">
+
+                        <div class="fw-semibold small">
+                            🔐 Protected Engineering Document
+                        </div>
+
+                        <div class="small text-muted mt-1">
+                            This document is provided for evaluation and manufacturing
+                            quotation purposes only. Do not share, copy or distribute
+                            the OEM technical information.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% else %}
+
+            <div class="alert alert-warning border-0 rounded-4 mb-4">
+
+                <div class="fw-semibold">
+                    Technical document unavailable
+                </div>
+
+                <div class="small mt-1">
+                    No technical drawing or CAD document has been attached
+                    to this requirement.
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- ================================================= -->
+            <!-- EXISTING BID NOTICE -->
+            <!-- ================================================= -->
+
+            {% if is_editing %}
+
+            <div class="alert alert-warning border-0 rounded-4 mb-4">
+
+                <div class="fw-semibold mb-1">
+                    You have already submitted a bid for this requirement.
+                </div>
+
+                <div class="small">
+                    You are modifying your existing quotation.
+                    Your updated price, delivery commitment and proposal
+                    notes will replace the previous submission.
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- ================================================= -->
+            <!-- BID FORM -->
+            <!-- ================================================= -->
+
+            <div class="card border-0 shadow-sm rounded-4">
+
+                <div class="card-body p-4 p-lg-5">
+
+                    <h5 class="fw-bold border-bottom pb-3 mb-4">
+
+                        {% if is_editing %}
+
+                            Update Your Manufacturing Proposal
+
+                        {% else %}
+
+                            Your Manufacturing Proposal
+
+                        {% endif %}
+
+                    </h5>
+
+
+                    <form method="POST">
+
+                        {% csrf_token %}
+
+
+                        <!-- ========================================= -->
+                        <!-- FORM ERRORS -->
+                        <!-- ========================================= -->
+
+                        {% if form.non_field_errors %}
+
+                        <div class="alert alert-danger">
+
+                            {{ form.non_field_errors }}
+
+                        </div>
+
+                        {% endif %}
+
+
+                        <!-- ========================================= -->
+                        <!-- OFFERED PRICE -->
+                        <!-- ========================================= -->
+
+                        <div class="mb-4">
+
+                            <label
+                                for="{{ form.offered_price.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Offered Price (INR)
+                            </label>
+
+
+                            {{ form.offered_price }}
+
+
+                            {% if form.offered_price.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.offered_price.errors }}
+
+                            </div>
+
+                            {% endif %}
+
+
+                            <div class="form-text">
+
+                                Enter your total manufacturing quotation
+                                in INR.
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ========================================= -->
+                        <!-- DELIVERY DAYS -->
+                        <!-- ========================================= -->
+
+                        <div class="mb-4">
+
+                            <label
+                                for="{{ form.delivery_days.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Estimated Delivery Time
+                            </label>
+
+
+                            <div class="input-group">
+
+                                {{ form.delivery_days }}
+
+                                <span class="input-group-text">
+                                    Days
+                                </span>
+
+                            </div>
+
+
+                            {% if form.delivery_days.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.delivery_days.errors }}
+
+                            </div>
+
+                            {% endif %}
+
+
+                            <div class="form-text">
+
+                                Enter the number of calendar days required
+                                to complete the manufacturing requirement.
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ========================================= -->
+                        <!-- PROPOSAL NOTES -->
+                        <!-- ========================================= -->
+
+                        <div class="mb-4">
+
+                            <label
+                                for="{{ form.proposal_notes.id_for_label }}"
+                                class="form-label fw-semibold"
+                            >
+                                Proposal Notes
+                            </label>
+
+
+                            {{ form.proposal_notes }}
+
+
+                            {% if form.proposal_notes.errors %}
+
+                            <div class="text-danger small mt-1">
+
+                                {{ form.proposal_notes.errors }}
+
+                            </div>
+
+                            {% endif %}
+
+
+                            <div class="form-text">
+
+                                Mention material availability, machine capability,
+                                inspection capability, tooling requirements,
+                                subcontracting requirements or other relevant
+                                manufacturing information.
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ========================================= -->
+                        <!-- CONFIDENTIALITY NOTICE -->
+                        <!-- ========================================= -->
+
+                        <div class="alert alert-light border rounded-3 mb-4">
+
+                            <div class="fw-semibold mb-1">
+
+                                Confidential Commercial Submission
+
+                            </div>
+
+
+                            <small class="text-muted">
+
+                                Your quotation is submitted securely to Primexa
+                                for evaluation. Vendor pricing is confidential
+                                and is not disclosed to competing vendors.
+
+                            </small>
+
+                        </div>
+
+
+                        <!-- ========================================= -->
+                        <!-- UPDATE WARNING -->
+                        <!-- ========================================= -->
+
+                        {% if is_editing %}
+
+                        <div class="alert alert-info border-0 rounded-3 mb-4">
+
+                            <div class="fw-semibold mb-1">
+
+                                Updating this quotation
+
+                            </div>
+
+
+                            <small>
+
+                                Your previous quotation will be replaced by
+                                the information submitted here. Primexa will
+                                evaluate the latest version of your bid.
+
+                            </small>
+
+                        </div>
+
+                        {% endif %}
+
+
+                        <!-- ========================================= -->
+                        <!-- ACTIONS -->
+                        <!-- ========================================= -->
+
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+
+                            <a
+                                href="{% url 'vendor_dashboard' %}"
+                                class="btn btn-outline-secondary px-4"
+                            >
+                                Cancel
+                            </a>
+
+
+                            {% if is_editing %}
+
+                            <button
+                                type="submit"
+                                class="btn btn-dark px-5 py-2"
+                                style="background-color:#0a192f;"
+                            >
+                                Update Confidential Bid
+                            </button>
+
+                            {% else %}
+
+                            <button
+                                type="submit"
+                                class="btn btn-dark px-5 py-2"
+                                style="background-color:#0a192f;"
+                            >
+                                Submit Confidential Bid
+                            </button>
+
+                            {% endif %}
+
+                        </div>
+
+
+                    </form>
+
+                </div>
 
             </div>
 
         </div>
 
     </div>
-
-</div>
-```
 
 </div>
 

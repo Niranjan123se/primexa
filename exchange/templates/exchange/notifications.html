@@ -1,0 +1,223 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- PAGE HEADER -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold mb-1">
+                Notifications
+            </h2>
+
+            <p class="text-muted mb-0">
+                Important updates and actions from the Primexa network.
+            </p>
+        </div>
+
+        <span class="badge bg-dark px-3 py-2">
+            {{ notifications|length }} Notifications
+        </span>
+
+    </div>
+
+
+    {% if notifications %}
+
+        <div class="card border-0 shadow-sm rounded-4">
+
+            <div class="card-body p-0">
+
+                {% for notification in notifications %}
+
+                    <div class="p-4 border-bottom">
+
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+
+                            <div class="d-flex gap-3">
+
+                                <!-- ICON -->
+
+                                <div
+                                    class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0
+                                    {% if notification.notification_type == 'FAI_REJECTED' %}
+                                        bg-danger-subtle text-danger
+                                    {% elif notification.notification_type == 'FAI_APPROVED' %}
+                                        bg-success-subtle text-success
+                                    {% elif notification.notification_type == 'DELIVERY_RISK' %}
+                                        bg-warning-subtle text-warning
+                                    {% else %}
+                                        bg-light text-dark
+                                    {% endif %}"
+                                    style="width:45px;height:45px;"
+                                >
+
+                                    {% if notification.notification_type == "FAI_REJECTED" %}
+                                        !
+                                    {% elif notification.notification_type == "FAI_APPROVED" %}
+                                        ✓
+                                    {% elif notification.notification_type == "DELIVERY_RISK" %}
+                                        !
+                                    {% else %}
+                                        •
+                                    {% endif %}
+
+                                </div>
+
+
+                                <!-- CONTENT -->
+
+                                <div>
+
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                                        <h6 class="fw-bold mb-0">
+                                            {{ notification.subject }}
+                                        </h6>
+
+                                        {% if notification.notification_type == "FAI_REJECTED" %}
+
+                                            <span class="badge bg-danger">
+                                                FAI REJECTED
+                                            </span>
+
+                                        {% elif notification.notification_type == "FAI_APPROVED" %}
+
+                                            <span class="badge bg-success">
+                                                FAI APPROVED
+                                            </span>
+
+                                        {% elif notification.notification_type == "DELIVERY_RISK" %}
+
+                                            <span class="badge bg-warning text-dark">
+                                                DELIVERY RISK
+                                            </span>
+
+                                        {% endif %}
+
+                                    </div>
+
+
+                                    <div class="text-muted small mt-2">
+
+                                        {{ notification.message|linebreaksbr }}
+
+                                    </div>
+
+
+                                    {% if notification.cad_model %}
+
+                                        <div class="mt-3">
+
+                                            <span class="small text-muted">
+                                                Requirement:
+                                            </span>
+
+                                            <strong class="small">
+                                                {{ notification.cad_model.title }}
+                                            </strong>
+
+                                            <span class="text-muted small ms-2">
+                                                {{ notification.cad_model.tracking_number }}
+                                            </span>
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- DATE -->
+
+                            <div class="text-muted small text-nowrap">
+
+                                {{ notification.created_at|date:"d M Y, H:i" }}
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- FAI REJECTION ACTION -->
+
+                        {% if notification.notification_type == "FAI_REJECTED" %}
+
+                            <div class="alert alert-danger mt-3 mb-0">
+
+                                <div class="fw-semibold">
+                                    Action Required
+                                </div>
+
+                                <div class="small mt-1">
+                                    Please correct the FAI documents
+                                    according to the engineering remarks
+                                    and resubmit the inspection package.
+                                </div>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- ACTION URL -->
+
+                        {% if notification.action_url %}
+
+                            <div class="mt-3">
+
+                                <a
+                                    href="{{ notification.action_url }}"
+                                    class="btn btn-sm btn-dark px-4"
+                                >
+                                    {{ notification.action_text|default:"Open" }}
+                                </a>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+
+    {% else %}
+
+        <div class="card border-0 shadow-sm rounded-4">
+
+            <div class="card-body text-center py-5">
+
+                <div
+                    class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                    style="width:70px;height:70px;"
+                >
+                    ✓
+                </div>
+
+                <h4 class="fw-bold">
+                    You're all caught up
+                </h4>
+
+                <p class="text-muted mb-0">
+                    There are no new notifications.
+                </p>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

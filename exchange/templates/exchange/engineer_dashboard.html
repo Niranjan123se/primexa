@@ -2,185 +2,569 @@
 
 {% block content %}
 
-<div class="container py-5">
+<div class="container-fluid py-4">
 
-```
-<div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- ===================================================== -->
+    <!-- HEADER -->
+    <!-- ===================================================== -->
 
-    <div>
-        <h2 class="fw-bold mb-1">Engineering Control Center</h2>
-        <p class="text-muted mb-0">
-            Review requirements, control vendor access and manage sourcing.
-        </p>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold mb-1">
+                Engineering Control Center
+            </h2>
+
+            <p class="text-muted mb-0">
+                Review requirements, manage sourcing, monitor production
+                and control delivery risks.
+            </p>
+        </div>
+
+        <span class="badge bg-dark px-3 py-2">
+            PRIMEXA INTERNAL
+        </span>
+
     </div>
 
-    <span class="badge bg-dark px-3 py-2">
-        PRIMEXA INTERNAL
-    </span>
 
-</div>
+    <!-- ===================================================== -->
+    <!-- DELIVERY RISK ALERTS -->
+    <!-- ===================================================== -->
 
+    {% if delivery_risk_alerts %}
 
-{% if jobs %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
 
-<div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 px-4 pt-4">
 
-    <div class="card-body p-0">
+            <div class="d-flex justify-content-between align-items-center">
 
-        <div class="table-responsive">
+                <div>
 
-            <table class="table align-middle mb-0">
+                    <h4 class="fw-bold mb-1">
+                        🚨 Delivery Risk Center
+                    </h4>
 
-                <thead class="table-light">
+                    <p class="text-muted small mb-0">
+                        Vendors have reported potential delays on these orders.
+                    </p>
 
-                    <tr>
-                        <th class="px-4">Requirement</th>
-                        <th>OEM</th>
-                        <th>Quantity</th>
-                        <th>Status</th>
-                        <th class="text-end px-4">Actions</th>
-                    </tr>
+                </div>
 
-                </thead>
+                <span class="badge bg-danger px-3 py-2">
+                    {{ delivery_risk_alerts|length }} Active Alert{% if delivery_risk_alerts|length != 1 %}s{% endif %}
+                </span>
 
-                <tbody>
+            </div>
 
-                    {% for job in jobs %}
-
-                    <tr>
-
-                        <td class="px-4">
-
-                            <div class="fw-semibold">
-                                {{ job.title }}
-                            </div>
-
-                            <small class="text-muted">
-                                {{ job.tracking_number }}
-                            </small>
-
-                        </td>
+        </div>
 
 
-                        <td>
+        <div class="card-body p-0">
 
-                            <div class="fw-semibold">
-                                {{ job.uploaded_by.company_name|default:job.uploaded_by.username }}
-                            </div>
+            <div class="table-responsive">
 
-                            <small class="text-muted">
-                                {{ job.uploaded_by.unique_id }}
-                            </small>
+                <table class="table align-middle mb-0">
 
-                        </td>
+                    <thead class="table-light">
 
+                        <tr>
 
-                        <td>
-                            {{ job.batch_quantity }}
-                        </td>
+                            <th class="px-4">
+                                Requirement
+                            </th>
 
+                            <th>
+                                Vendor
+                            </th>
 
-                        <td>
+                            <th>
+                                Original Delivery
+                            </th>
 
-                            {% if job.status == "COMPLETED" %}
+                            <th>
+                                Revised Delivery
+                            </th>
 
-                                <span class="badge bg-success">
-                                    {{ job.get_status_display }}
-                                </span>
+                            <th>
+                                Risk
+                            </th>
 
-                            {% elif job.status == "REJECTED" %}
+                            <th class="text-end px-4">
+                                Action
+                            </th>
 
-                                <span class="badge bg-danger">
-                                    {{ job.get_status_display }}
-                                </span>
+                        </tr>
 
-                            {% elif job.status == "VENDOR_AWARDED" or job.status == "FINAL_VENDOR_ONBOARDED" %}
-
-                                <span class="badge bg-primary">
-                                    {{ job.get_status_display }}
-                                </span>
-
-                            {% elif job.status == "BID_PLACED" %}
-
-                                <span class="badge bg-warning text-dark">
-                                    {{ job.get_status_display }}
-                                </span>
-
-                            {% elif job.status == "PUBLISHED" %}
-
-                                <span class="badge bg-success">
-                                    Published
-                                </span>
-
-                            {% else %}
-
-                                <span class="badge bg-secondary">
-                                    {{ job.get_status_display }}
-                                </span>
-
-                            {% endif %}
-
-                        </td>
+                    </thead>
 
 
-                        <td class="text-end px-4">
+                    <tbody>
 
-                            <div class="d-flex justify-content-end gap-2">
+                        {% for alert in delivery_risk_alerts %}
 
-                                <a href="{% url 'review_workload' job.id %}"
-                                   class="btn btn-sm btn-outline-dark">
-                                    Review
-                                </a>
+                        <tr>
+
+                            <!-- REQUIREMENT -->
+
+                            <td class="px-4">
+
+                                <div class="fw-semibold">
+                                    {{ alert.cad_model.title }}
+                                </div>
+
+                                <small class="text-muted">
+                                    {{ alert.cad_model.tracking_number }}
+                                </small>
+
+                            </td>
 
 
-                                {% if job.status == "BID_PLACED" or job.bids.exists %}
+                            <!-- VENDOR -->
 
-                                <a href="{% url 'primexa_manage_bids' job.id %}"
-                                   class="btn btn-sm btn-dark"
-                                   style="background-color:#0a192f;">
-                                    Manage Bids
-                                </a>
+                            <td>
+
+                                {% if alert.vendor %}
+
+                                    <div class="fw-semibold">
+                                        {{ alert.vendor.company_name|default:alert.vendor.username }}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        {{ alert.vendor.unique_id }}
+                                    </small>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        Vendor unavailable
+                                    </span>
 
                                 {% endif %}
 
-                            </div>
+                            </td>
 
-                        </td>
 
-                    </tr>
+                            <!-- ORIGINAL DATE -->
 
-                    {% endfor %}
+                            <td>
 
-                </tbody>
+                                {% if alert.original_delivery_date %}
 
-            </table>
+                                    {{ alert.original_delivery_date|date:"d M Y" }}
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- REVISED DATE -->
+
+                            <td>
+
+                                {% if alert.revised_delivery_date %}
+
+                                    <span class="fw-semibold text-danger">
+                                        {{ alert.revised_delivery_date|date:"d M Y" }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        Not provided
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- RISK -->
+
+                            <td>
+
+                                {% if alert.severity == "CRITICAL" %}
+
+                                    <span class="badge bg-danger">
+                                        CRITICAL
+                                    </span>
+
+                                {% elif alert.severity == "HIGH" %}
+
+                                    <span class="badge bg-danger">
+                                        HIGH
+                                    </span>
+
+                                {% elif alert.severity == "MEDIUM" %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        MEDIUM
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+                                        {{ alert.severity|default:"REVIEW" }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- ACTION -->
+
+                            <td class="text-end px-4">
+
+                                <a
+                                    href="{% url 'review_delivery_risk' alert.id %}"
+                                    class="btn btn-sm btn-outline-danger"
+                                >
+                                    Review Alert
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
     </div>
 
-</div>
+    {% endif %}
 
-{% else %}
 
-<div class="card border-0 shadow-sm rounded-4">
+    <!-- ===================================================== -->
+    <!-- REQUIREMENTS -->
+    <!-- ===================================================== -->
 
-    <div class="card-body text-center py-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
 
-        <h4 class="fw-bold mb-2">
-            No Requirements Found
-        </h4>
+        <div>
 
-        <p class="text-muted mb-0">
-            New OEM manufacturing requirements will appear here.
-        </p>
+            <h4 class="fw-bold mb-1">
+                Manufacturing Requirements
+            </h4>
+
+            <p class="text-muted small mb-0">
+                Review OEM requirements and manage the manufacturing workflow.
+            </p>
+
+        </div>
 
     </div>
 
-</div>
 
-{% endif %}
-```
+    {% if jobs %}
+
+    <div class="card border-0 shadow-sm rounded-4">
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th class="px-4">
+                                Requirement
+                            </th>
+
+                            <th>
+                                OEM
+                            </th>
+
+                            <th>
+                                Quantity
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th class="text-end px-4">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for job in jobs %}
+
+                        <tr>
+
+                            <!-- REQUIREMENT -->
+
+                            <td class="px-4">
+
+                                <div class="fw-semibold">
+                                    {{ job.title }}
+                                </div>
+
+                                <small class="text-muted">
+                                    {{ job.tracking_number }}
+                                </small>
+
+                            </td>
+
+
+                            <!-- OEM -->
+
+                            <td>
+
+                                <div class="fw-semibold">
+                                    {{ job.uploaded_by.company_name|default:job.uploaded_by.username }}
+                                </div>
+
+                                <small class="text-muted">
+                                    {{ job.uploaded_by.unique_id }}
+                                </small>
+
+                            </td>
+
+
+                            <!-- QUANTITY -->
+
+                            <td>
+                                {{ job.batch_quantity }}
+                            </td>
+
+
+                            <!-- STATUS -->
+
+                            <td>
+
+                                {% if job.status == "COMPLETED" %}
+
+                                    <span class="badge bg-success">
+                                        {{ job.get_status_display }}
+                                    </span>
+
+                                {% elif job.status == "REJECTED" or job.status == "OEM_REJECTED" %}
+
+                                    <span class="badge bg-danger">
+                                        {{ job.get_status_display }}
+                                    </span>
+
+                                {% elif job.status == "OEM_APPROVAL_PENDING" %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        OEM Approval Pending
+                                    </span>
+
+                                {% elif job.status == "OEM_APPROVED" %}
+
+                                    <span class="badge bg-success">
+                                        OEM Approved
+                                    </span>
+
+                                {% elif job.status == "VENDOR_AWARDED" %}
+
+                                    <span class="badge bg-primary">
+                                        Vendor Awarded
+                                    </span>
+
+                                {% elif job.status == "FINAL_VENDOR_ONBOARDED" %}
+
+                                    <span class="badge bg-primary">
+                                        Vendor Onboarded
+                                    </span>
+
+                                {% elif job.status == "FAI_PENDING" %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        FAI Pending
+                                    </span>
+
+                                {% elif job.status == "FAI_APPROVED" %}
+
+                                    <span class="badge bg-success">
+                                        FAI Approved
+                                    </span>
+
+                                {% elif job.status == "BID_PLACED" %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        {{ job.get_status_display }}
+                                    </span>
+
+                                {% elif job.status == "PUBLISHED" %}
+
+                                    <span class="badge bg-success">
+                                        Published
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+                                        {{ job.get_status_display }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- ACTIONS -->
+
+                            <td class="text-end px-4">
+
+                                <div class="d-flex justify-content-end gap-2 flex-wrap">
+
+
+                                    <!-- REVIEW -->
+
+                                    <a
+                                        href="{% url 'review_workload' job.id %}"
+                                        class="btn btn-sm btn-outline-dark"
+                                    >
+                                        Review
+                                    </a>
+
+
+                                    <!-- MANAGE BIDS -->
+
+                                    {% if job.status == "BID_PLACED" or job.bids.exists %}
+
+                                    <a
+                                        href="{% url 'primexa_manage_bids' job.id %}"
+                                        class="btn btn-sm btn-dark"
+                                        style="background-color:#0a192f;"
+                                    >
+                                        Manage Bids
+                                    </a>
+                                    <a
+                                        href="{% url 'engineering_process_plan' job.id %}"
+                                        class="btn btn-sm btn-outline-dark"
+                                    >
+                                        Process Plan
+                                    </a>
+
+                                    {% endif %}
+
+
+                                    <!-- OEM APPROVAL -->
+
+                                    {% if job.status == "OEM_APPROVAL_PENDING" %}
+
+                                    <span
+                                        class="btn btn-sm btn-outline-warning disabled"
+                                    >
+                                        Awaiting OEM
+                                    </span>
+
+                                    {% endif %}
+
+
+                                    <!-- FINAL AWARD -->
+
+                                    {% if job.status == "OEM_APPROVED" %}
+
+                                    <a
+                                        href="{% url 'final_vendor_award' job.id %}"
+                                        class="btn btn-sm btn-success"
+                                    >
+                                        Issue Final Award
+                                    </a>
+
+                                    {% endif %}
+
+
+                                    <!-- FAI -->
+
+                                    {% if job.status == "VENDOR_AWARDED" or job.status == "FINAL_VENDOR_ONBOARDED" %}
+
+                                    <a
+                                        href="{% url 'fai_review' job.id %}"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        FAI Review
+                                    </a>
+
+                                    {% endif %}
+
+
+                                    {% if job.status == "FAI_PENDING" %}
+
+                                    <a
+                                        href="{% url 'fai_review' job.id %}"
+                                        class="btn btn-sm btn-warning"
+                                    >
+                                        Review FAI
+                                    </a>
+
+                                    {% endif %}
+
+
+                                    {% if job.status == "FAI_APPROVED" %}
+
+                                    <span
+                                        class="btn btn-sm btn-outline-success disabled"
+                                    >
+                                        FAI Approved
+                                    </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% else %}
+
+    <div class="card border-0 shadow-sm rounded-4">
+
+        <div class="card-body text-center py-5">
+
+            <h4 class="fw-bold mb-2">
+                No Requirements Found
+            </h4>
+
+            <p class="text-muted mb-0">
+                New OEM manufacturing requirements will appear here.
+            </p>
+
+        </div>
+
+    </div>
+
+    {% endif %}
 
 </div>
 

@@ -1,0 +1,203 @@
+{% extends "users/base.html" %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold mb-1">
+                Vendor Profile
+            </h2>
+
+            <p class="text-muted mb-0">
+                Manage your company, manufacturing capabilities,
+                quality information and operating details.
+            </p>
+        </div>
+
+        <span class="badge bg-dark px-3 py-2">
+            VERIFIED VENDOR
+        </span>
+
+    </div>
+
+
+    <form method="POST" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+
+        <!-- ==================================================
+             ACCOUNT INFORMATION
+        ================================================== -->
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+            <div class="card-body p-4">
+
+                <h5 class="fw-bold mb-4">
+                    Account Information
+                </h5>
+
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Username
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control bg-light border-0 shadow-sm"
+                            value="{{ request.user.username }}"
+                            disabled
+                        >
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Enterprise ID
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control bg-light border-0 shadow-sm"
+                            value="{{ request.user.unique_id }}"
+                            disabled
+                        >
+
+                    </div>
+
+
+                    {% for field in user_form %}
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            {{ field.label }}
+                        </label>
+
+                        {{ field }}
+
+                        {% for error in field.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==================================================
+             VENDOR PROFILE
+        ================================================== -->
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+            <div class="card-body p-4">
+
+                <h5 class="fw-bold mb-4">
+                    Company & Leadership
+                </h5>
+
+                <div class="row g-4">
+
+                    {% for field in profile_form %}
+
+                        <div class="
+                            {% if field.name == 'location' or field.name == 'past_customers' or field.name == 'certificates' or field.name == 'machinery_list' or field.name == 'quality_instruments' or field.name == 'current_inserts_used' or field.name == 'other_services_needed' %}
+                                col-12
+                            {% else %}
+                                col-md-6
+                            {% endif %}
+                        ">
+
+                            {% if field.field.widget.input_type == "checkbox" %}
+
+                                <div class="form-check mt-4">
+
+                                    {{ field }}
+
+                                    <label class="form-check-label fw-semibold">
+                                        {{ field.label }}
+                                    </label>
+
+                                </div>
+
+                            {% else %}
+
+                                <label class="form-label fw-semibold">
+                                    {{ field.label }}
+                                </label>
+
+                                {{ field }}
+
+                            {% endif %}
+
+
+                            {% if field.help_text %}
+                                <div class="form-text">
+                                    {{ field.help_text }}
+                                </div>
+                            {% endif %}
+
+
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==================================================
+             SAVE
+        ================================================== -->
+
+        <div class="d-flex justify-content-end gap-2">
+
+            <a
+                href="{% url 'vendor_dashboard' %}"
+                class="btn btn-outline-secondary px-4"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-dark px-5"
+                style="background-color:#0a192f;"
+            >
+                Save Profile
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
