@@ -2,6 +2,9 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
+from django.urls import reverse
+
+from users.models import VendorProfile
 
 from ..models import (
     CADModel,
@@ -31,6 +34,9 @@ def dashboard(request):
 
     if request.user.role == "VENDOR":
         return redirect("vendor_dashboard")
+
+    if request.user.role == "EXPERT":
+        return redirect("expert_dashboard")
 
     return redirect("login")
 
@@ -227,6 +233,14 @@ def vendor_dashboard(request):
     # RENDER VENDOR DASHBOARD
     # ----------------------------------------------------------
 
+    public_profile_url = None
+    if not request.user.is_superuser:
+        vendor_profile, _ = VendorProfile.objects.get_or_create(user=request.user)
+        if vendor_profile.public_slug:
+            public_profile_url = reverse(
+                "public_vendor_profile", kwargs={"slug": vendor_profile.public_slug}
+            )
+
     return render(
         request,
         "exchange/vendor_dashboard.html",
@@ -234,6 +248,7 @@ def vendor_dashboard(request):
             "jobs": jobs,
             "my_bids": my_bids,
             "awarded_jobs": awarded_jobs,
+            "public_profile_url": public_profile_url,
 
             # --------------------------------------------------
             # IMPORTANT

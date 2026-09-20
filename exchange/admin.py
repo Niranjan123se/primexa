@@ -67,6 +67,7 @@ class BidAdmin(admin.ModelAdmin):
         "cad_model",
         "vendor",
         "offered_price",
+        "cost_breakdown_total",
         "delivery_days",
         "created_at",
     )

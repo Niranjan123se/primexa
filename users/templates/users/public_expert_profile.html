@@ -1,0 +1,13 @@
+{% extends "users/base.html" %}
+{% block title %}{{ profile.headline|default:profile.user.username }} | Primexa{% endblock %}
+{% block content %}
+<article class="card border-0 shadow-sm"><div class="card-body p-4 p-lg-5">
+<div class="d-flex justify-content-between gap-3 mb-3"><div><h1 class="h2 fw-bold">{{ profile.user.get_full_name|default:profile.user.company_name|default:profile.user.username }}</h1><p class="lead mb-1">{{ profile.headline }}</p><p class="text-muted">{{ profile.city }} · {{ profile.years_of_experience }} years experience</p></div>{% if profile.is_available %}<span class="badge text-bg-success align-self-start">Available now</span>{% endif %}</div>
+<section class="mb-4"><h2 class="h5">Skills and expertise</h2><p>{{ profile.expertise|linebreaksbr }}</p></section>
+{% if profile.industries %}<section class="mb-4"><h2 class="h5">Industries</h2><p>{{ profile.industries|linebreaksbr }}</p></section>{% endif %}
+{% if profile.projects %}<section class="mb-4"><h2 class="h5">Selected projects</h2><p>{{ profile.projects|linebreaksbr }}</p></section>{% endif %}
+{% if profile.certifications %}<section class="mb-4"><h2 class="h5">Certifications and qualifications</h2><p>{{ profile.certifications|linebreaksbr }}</p></section>{% endif %}
+{% if profile.about %}<section class="mb-4"><h2 class="h5">Professional background</h2><p>{{ profile.about|linebreaksbr }}</p></section>{% endif %}
+{% if user.is_authenticated %}<section class="border-top pt-4"><h2 class="h5">Contact and booking</h2>{% if profile.availability_note %}<p class="text-success">{{ profile.availability_note }}</p>{% endif %}<p class="mb-1"><a href="mailto:{{ profile.user.email }}">{{ profile.user.email }}</a></p>{% if profile.user.phone_number %}<p>{{ profile.user.phone_number }}</p>{% endif %}<a class="btn btn-dark" href="{% url 'request_service' %}?expert={{ profile.user.get_full_name|default:profile.user.username|urlencode }}">Request this expert</a></section>{% else %}<section class="border-top pt-4"><h2 class="h5">Contact and booking</h2><p class="text-muted">Log in or register to view contact details and request this expert.</p><a class="btn btn-dark" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in to contact</a></section>{% endif %}
+</div></article>
+{% endblock %}

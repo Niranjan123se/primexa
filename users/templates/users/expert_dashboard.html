@@ -1,0 +1,7 @@
+{% extends "users/base.html" %}
+{% block title %}Expert dashboard | Primexa{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h2 mb-1">Expert dashboard</h1><p class="text-muted mb-0">{{ profile.headline|default:"Complete your professional profile" }}</p></div><a href="{% url 'profile' %}" class="btn btn-dark">Edit profile</a></div>
+<div class="alert alert-light border d-flex justify-content-between align-items-center"><span><strong>Your public profile URL:</strong> {{ request.scheme }}://{{ request.get_host }}{{ public_profile_url }}{% if not profile.is_public_profile %} <span class="text-muted">(enable publication through Primexa approval)</span>{% endif %}</span><a class="btn btn-sm btn-outline-dark" href="{{ public_profile_url }}">View profile</a></div>
+<div class="card shadow-sm border-0"><div class="card-body"><h2 class="h5">My service requests</h2><ul class="list-group list-group-flush">{% for service_request in service_requests %}<li class="list-group-item d-flex justify-content-between"><span>{{ service_request.project_title }}</span><span class="badge text-bg-secondary">{{ service_request.get_status_display }}</span></li>{% empty %}<li class="list-group-item text-muted">No service requests submitted.</li>{% endfor %}</ul></div></div>
+{% endblock %}

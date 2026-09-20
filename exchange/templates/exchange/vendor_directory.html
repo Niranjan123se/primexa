@@ -1,0 +1,54 @@
+{% extends "users/base.html" %}
+
+{% block title %}Find Manufacturing Vendors | Primexa{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="Find approved manufacturing vendors in the Primexa network by location, process, machine, material, certification, industry and availability.">
+<link rel="canonical" href="{{ canonical_url }}">
+{% endblock %}
+
+{% block content %}
+<section class="mb-4">
+    <h1 class="display-6 fw-bold mb-2">Find a Manufacturing Vendor</h1>
+    <p class="text-muted mb-0">Filter the approved Primexa vendor network using structured capability data.</p>
+</section>
+
+<form method="get" class="card border-0 shadow-sm rounded-4 mb-5">
+    <div class="card-body p-4">
+        <div class="row g-3">
+            <div class="col-12"><label class="form-label" for="id_q">What do you need?</label><input class="form-control" id="id_q" name="q" value="{{ filters.q }}" placeholder="Company, process, machine, or location"></div>
+            <div class="col-md-4"><label class="form-label" for="id_city">City</label><select class="form-select" id="id_city" name="city"><option value="">Any city</option>{% for city in filter_options.cities %}<option value="{{ city }}" {% if filters.city == city %}selected{% endif %}>{{ city }}</option>{% endfor %}</select></div>
+            <div class="col-md-4"><label class="form-label" for="id_industrial_area">Industrial area</label><select class="form-select" id="id_industrial_area" name="industrial_area"><option value="">Any industrial area</option>{% for area in filter_options.industrial_areas %}<option value="{{ area }}" {% if filters.industrial_area == area %}selected{% endif %}>{{ area }}</option>{% endfor %}</select></div>
+            <div class="col-md-4"><label class="form-label" for="id_process">Process</label><select class="form-select" id="id_process" name="process"><option value="">Any process</option>{% for value, label in filter_options.processes %}<option value="{{ value }}" {% if filters.process == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <div class="col-md-4"><label class="form-label" for="id_machine_type">Machine</label><select class="form-select" id="id_machine_type" name="machine_type"><option value="">Any machine</option>{% for machine_type in filter_options.machine_types %}<option value="{{ machine_type }}" {% if filters.machine_type == machine_type %}selected{% endif %}>{{ machine_type }}</option>{% endfor %}</select></div>
+            <div class="col-md-4"><label class="form-label" for="id_material">Material</label><select class="form-select" id="id_material" name="material"><option value="">Any material</option>{% for value, label in filter_options.materials %}<option value="{{ value }}" {% if filters.material == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <div class="col-md-4"><label class="form-label" for="id_certification">Certification</label><select class="form-select" id="id_certification" name="certification"><option value="">Any certification</option>{% for value, label in filter_options.certifications %}<option value="{{ value }}" {% if filters.certification == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <div class="col-md-4"><label class="form-label" for="id_industry">Industry</label><select class="form-select" id="id_industry" name="industry"><option value="">Any industry</option>{% for value, label in filter_options.industries %}<option value="{{ value }}" {% if filters.industry == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <div class="col-md-4"><label class="form-label" for="id_availability">Capacity</label><select class="form-select" id="id_availability" name="availability"><option value="">Any capacity</option><option value="open_to_subcontract" {% if filters.availability == "open_to_subcontract" %}selected{% endif %}>Open to subcontracting</option></select></div>
+            <div class="col-md-4 d-flex align-items-end"><div class="form-check mb-2"><input class="form-check-input" type="checkbox" value="1" id="id_verified" name="verified" {% if filters.verified %}checked{% endif %}><label class="form-check-label" for="id_verified">Verified vendors only</label></div></div>
+        </div>
+        <div class="d-flex gap-2 mt-4"><button class="btn btn-dark px-4" type="submit">Apply filters</button><a class="btn btn-outline-secondary" href="{% url 'vendor_directory' %}">Clear</a></div>
+    </div>
+</form>
+
+<section>
+    <div class="d-flex justify-content-between align-items-baseline mb-3"><h2 class="h3 fw-bold">Matched vendors</h2><span class="text-muted">{{ profiles|length }} result{{ profiles|length|pluralize }}</span></div>
+    {% if profiles %}
+    <div class="row g-4">
+        {% for profile in profiles %}
+        <article class="col-md-6 col-xl-4"><div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4 d-flex flex-column">
+            <div class="d-flex justify-content-between gap-2 mb-2"><h3 class="h5 fw-bold mb-0">{{ profile.user.company_name }}</h3>{% if profile.is_verified %}<span class="badge bg-success align-self-start">Verified</span>{% endif %}</div>
+            <p class="text-muted small">{{ profile.industrial_area }}{% if profile.industrial_area and profile.city %}, {% endif %}{{ profile.city }}</p>
+            {% if profile.match_score %}<p class="small text-success mb-2">{{ profile.match_score }}% of selected filters matched</p>{% endif %}
+            {% if profile.process_capabilities.all %}<p class="small mb-2"><strong>Processes:</strong> {% for process in profile.process_capabilities.all %}{{ process.get_process_type_display }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+            {% if profile.machines.all %}<p class="small mb-2"><strong>Machines:</strong> {% for machine in profile.machines.all %}{{ machine.machine_name }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+            {% if profile.materials.all %}<p class="small mb-3"><strong>Materials:</strong> {% for material in profile.materials.all %}{{ material.get_material_type_display }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+            <a href="{% url 'public_vendor_profile' profile.public_slug %}" class="btn btn-outline-dark mt-auto">View profile</a>
+        </div></div></article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm rounded-4"><div class="card-body text-center py-5"><h3 class="h5 fw-bold">No vendors match these filters</h3><p class="text-muted mb-0">Try removing a filter or broadening the location.</p></div></div>
+    {% endif %}
+</section>
+{% endblock %}

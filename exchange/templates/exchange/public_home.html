@@ -1,0 +1,59 @@
+{% extends "users/base.html" %}
+
+{% block title %}Primexa | Manufacturing Vendor Network{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="Primexa connects OEMs and manufacturing vendors through a verified capability network and managed procurement workflow.">
+<link rel="canonical" href="{{ request.build_absolute_uri }}">
+{% endblock %}
+
+{% block content %}
+<section class="rounded-4 p-4 p-lg-5 mb-5 text-white" style="background:linear-gradient(135deg,#0a192f,#172a45);">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <p class="text-uppercase small fw-bold" style="color:#64ffda; letter-spacing:.08em;">Primexa manufacturing network</p>
+            <h1 class="display-5 fw-bold mb-3">Find the right manufacturing partner.</h1>
+            <p class="lead text-white-50 mb-4">Primexa helps OEMs and manufacturers discover verified machining shops, processes, machines, and capabilities—then manage secure manufacturing requirements from review through delivery.</p>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-light btn-lg" href="{% url 'vendor_directory' %}">Find a vendor</a>
+                <a class="btn btn-outline-light btn-lg" href="{% url 'expert_directory' %}">Find an expert</a>
+                <a class="btn btn-outline-light btn-lg" href="{% url 'login' %}">Log in</a>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card border-0 shadow rounded-4 text-dark"><div class="card-body p-4">
+                <h2 class="h4 fw-bold">Search the network</h2>
+                <form method="get" action="{% url 'vendor_directory' %}">
+                    <div class="mb-3"><label class="form-label" for="id_home_q">What do you need?</label><input class="form-control" id="id_home_q" name="q" placeholder="Machining shop, vendor, process, or machine"></div>
+                    <div class="mb-3"><label class="form-label" for="id_home_process">Find a process</label><select class="form-select" id="id_home_process" name="process"><option value="">Any process</option>{% for value, label in processes %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+                    <div class="mb-3"><label class="form-label" for="id_home_machine">Find a machine</label><select class="form-select" id="id_home_machine" name="machine_type"><option value="">Any machine</option>{% for machine_type in machine_types %}<option value="{{ machine_type }}">{{ machine_type }}</option>{% endfor %}</select></div>
+                    <button class="btn btn-dark w-100" type="submit">Search vendors</button>
+                </form>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="text-center mb-4">
+        <h2 class="h1 fw-bold">Join Primexa</h2>
+        <p class="text-muted mb-0">Choose the account that fits your role in the manufacturing network.</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4"><div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4 d-flex flex-column"><h3 class="h4 fw-bold">Register as an OEM</h3><p class="text-muted">Post manufacturing requirements and manage your procurement workflow.</p><a class="btn btn-dark mt-auto" href="{% url 'register_oem' %}">Register as OEM</a></div></div></div>
+        <div class="col-md-4"><div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4 d-flex flex-column"><h3 class="h4 fw-bold">Register as a vendor</h3><p class="text-muted">Show your shop capabilities and receive relevant manufacturing opportunities.</p><a class="btn btn-dark mt-auto" href="{% url 'register_vendor' %}">Register as vendor</a></div></div></div>
+        <div class="col-md-4"><div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4 d-flex flex-column"><h3 class="h4 fw-bold">Register as an expert</h3><p class="text-muted">Build a professional profile as an independent manufacturing specialist.</p><a class="btn btn-dark mt-auto" href="{% url 'register_expert' %}">Register as expert</a></div></div></div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="text-center mb-4"><h2 class="h1 fw-bold">How Primexa works</h2><p class="text-muted mb-0">One vendor network for discovery and managed manufacturing.</p></div>
+    <div class="row g-4">
+        <div class="col-md-4"><div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4"><div class="fs-3 mb-2">01</div><h3 class="h4 fw-bold">Find a vendor</h3><p class="text-muted mb-0">Search manufacturing partners by location, process, machine, material, quality and industry.</p></div></div></div>
+        <div class="col-md-4"><div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4"><div class="fs-3 mb-2">02</div><h3 class="h4 fw-bold">Primexa Managed</h3><p class="text-muted mb-0">Upload a requirement and Primexa engineers define the manufacturing route and match suitable vendors.</p></div></div></div>
+        <div class="col-md-4"><div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4"><div class="fs-3 mb-2">03</div><h3 class="h4 fw-bold">Deliver with confidence</h3><p class="text-muted mb-0">Secure documents, NDA controls, bids, commercial approval, FAI and delivery monitoring remain in one workflow.</p></div></div></div>
+    </div>
+</section>
+
+<section class="card border-0 shadow-sm rounded-4"><div class="card-body p-4 p-lg-5 text-center"><h2 class="h3 fw-bold">Own a manufacturing shop?</h2><p class="text-muted">Create your vendor account and build a public capability profile for the Primexa network.</p><a class="btn btn-dark px-4" href="{% url 'register_vendor' %}">Register as a vendor</a></div></section>
+{% endblock %}

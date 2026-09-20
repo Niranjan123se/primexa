@@ -31,6 +31,12 @@ urlpatterns = [
         name="register_vendor"
     ),
 
+    path("register/expert/", views.register_expert, name="register_expert"),
+    path("expert/dashboard/", views.expert_dashboard, name="expert_dashboard"),
+    path("request-service/", views.request_service, name="request_service"),
+    path("experts/", views.expert_directory, name="expert_directory"),
+    path("experts/<int:expert_id>/", views.public_expert_profile, name="public_expert_profile"),
+
     path(
         "terms-conditions/",
         views.terms_conditions,

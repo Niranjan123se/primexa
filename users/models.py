@@ -1,12 +1,14 @@
 import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils.text import slugify
 
 def generate_unique_id(role):
     prefix_map = {
         'OEM': 'FX-OEM',
         'VENDOR': 'FX-VND',
-        'ENGINEER': 'FX-ENG'
+        'ENGINEER': 'FX-ENG',
+        'EXPERT': 'FX-EXP'
     }
     prefix = prefix_map.get(role, 'FX-USR')
     return f"{prefix}-{str(uuid.uuid4()).upper()[:6]}"
@@ -16,6 +18,7 @@ class User(AbstractUser):
         ('OEM', 'Original Equipment Manufacturer'),
         ('VENDOR', 'Vendor / Manufacturer'),
         ('ENGINEER', 'Primexa Staff Engineer'),
+        ('EXPERT', 'Independent Manufacturing Expert'),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='OEM')
     unique_id = models.CharField(max_length=50, unique=True, blank=True, editable=False, help_text="System-wide unique enterprise ID")
@@ -27,6 +30,27 @@ class User(AbstractUser):
         if not self.unique_id:
             self.unique_id = generate_unique_id(self.role)
         super().save(*args, **kwargs)
+
+
+class LoginActivity(models.Model):
+    """Immutable audit entry for each successful user login."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="login_activities",
+    )
+    logged_in_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=512, blank=True)
+
+    class Meta:
+        ordering = ("-logged_in_at",)
+        verbose_name = "login activity"
+        verbose_name_plural = "login activities"
+
+    def __str__(self):
+        return f"{self.user.username} logged in at {self.logged_in_at:%Y-%m-%d %H:%M:%S}"
 
 
 class VendorProfile(models.Model):
@@ -43,6 +67,35 @@ class VendorProfile(models.Model):
     pan_number = models.CharField(max_length=10, blank=True)
     cin_number = models.CharField(max_length=21, blank=True, null=True, help_text="Only for Pvt Ltd")
     location = models.TextField(blank=True, help_text="Full shop address")
+
+    # --- Public profile identity, publication and search location ---
+    # These fields are intentionally separate from the full shop address.  The
+    # address can remain private while discovery uses only approved, structured
+    # location data.
+    public_slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Unique URL slug for the public vendor profile.",
+    )
+    public_description = models.TextField(
+        blank=True,
+        help_text="Public company description for the vendor profile.",
+    )
+    country = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    industrial_area = models.CharField(max_length=150, blank=True)
+    pin_code = models.CharField(max_length=20, blank=True)
+    public_enquiry_email = models.EmailField(blank=True)
+    public_enquiry_phone = models.CharField(max_length=20, blank=True)
+
+    # Only Primexa staff should change these controls.  Public discovery and
+    # sitemap entries will require both publication and approval.
+    is_public_profile = models.BooleanField(default=False)
+    is_public_profile_approved = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
     
     TURNOVER_CHOICES = [
         ('LESS_50L', 'Less than 50 Lakhs'),
@@ -63,6 +116,41 @@ class VendorProfile(models.Model):
     min_part_size = models.CharField(max_length=100, blank=True)
     max_part_size = models.CharField(max_length=100, blank=True)
     quality_instruments = models.TextField(blank=True, help_text="e.g., CMM, Vernier, Micrometers, Height Gauge")
+
+    # Structured part and batch limits used for vendor discovery/matching.
+    # The original text fields above are retained for existing vendor data.
+    min_part_size_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    max_part_size_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    max_part_diameter_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    max_part_length_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    max_part_weight_kg = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    min_batch_quantity = models.PositiveIntegerField(null=True, blank=True)
+    max_batch_quantity = models.PositiveIntegerField(null=True, blank=True)
 
     # --- Operations & Tooling (Forge 360 Integration) ---
     machine_capacity = models.CharField(max_length=255, blank=True)
@@ -85,6 +173,8 @@ class VendorProfile(models.Model):
     def save(self, *args, **kwargs):
         if not self.vendor_id_code:
             self.vendor_id_code = self.user.unique_id
+        if not self.public_slug:
+            self.public_slug = slugify(f"{self.user.company_name}-{self.user_id}")
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -139,3 +229,60 @@ class EngineerProfile(models.Model):
 
     def __str__(self):
         return f"[{self.engineer_id_code}] {self.user.username} - Primexa Staff Engineer"
+
+
+class ExpertProfile(models.Model):
+    """Public specialist profile, separate from internal Primexa engineers."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="expert_profile")
+    expert_id_code = models.CharField(max_length=50, unique=True, blank=True, editable=False)
+    headline = models.CharField(max_length=200, blank=True)
+    expertise = models.TextField(help_text="Processes, domains, and technical skills.")
+    industries = models.TextField(blank=True)
+    projects = models.TextField(blank=True, help_text="Completed projects and case studies suitable for public display.")
+    certifications = models.TextField(blank=True, help_text="Professional certifications and qualifications.")
+    years_of_experience = models.PositiveIntegerField(default=0)
+    city = models.CharField(max_length=100, blank=True)
+    about = models.TextField(blank=True)
+    is_available = models.BooleanField(default=True)
+    availability_note = models.CharField(max_length=200, blank=True, help_text="For example: Available weekdays 10:00–16:00 IST.")
+    is_public_profile = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.expert_id_code:
+            self.expert_id_code = self.user.unique_id
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"[{self.expert_id_code}] {self.user.get_full_name() or self.user.username}"
+
+
+class ServiceRequest(models.Model):
+    REQUEST_TYPE_CHOICES = (
+        ("FIND_VENDOR", "Find a vendor for a task"),
+        ("FIND_EXPERT", "Find an expert for a project"),
+        ("END_TO_END", "Prototype to delivery / complete assembly"),
+    )
+    STATUS_CHOICES = (("NEW", "New"), ("CONTACTED", "Contacted"), ("QUALIFIED", "Qualified"), ("CLOSED", "Closed"))
+
+    submitted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_requests")
+    request_type = models.CharField(max_length=20, choices=REQUEST_TYPE_CHOICES)
+    project_title = models.CharField(max_length=255)
+    task_description = models.TextField()
+    required_processes = models.TextField(blank=True)
+    quantity_or_scope = models.CharField(max_length=150, blank=True)
+    budget_range = models.CharField(max_length=100, blank=True)
+    target_timeline = models.CharField(max_length=150, blank=True)
+    contact_name = models.CharField(max_length=150)
+    contact_email = models.EmailField()
+    contact_phone = models.CharField(max_length=20, blank=True)
+    company_name = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="NEW")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.get_request_type_display()}: {self.project_title}"

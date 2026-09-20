@@ -1,5 +1,6 @@
 import hashlib
 import uuid
+from decimal import Decimal
 
 from django.db import models
 
@@ -447,6 +448,24 @@ class Bid(models.Model):
         decimal_places=2,
     )
 
+    # Vendor cost break-up. The sum of these amounts must equal offered_price.
+    material_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    labour_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    machine_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    quality_assurance_cost = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0
+    )
+    tooling_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    development_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    prototype_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    production_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    packaging_and_transport_cost = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0
+    )
+    overhead_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    other_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    other_cost_description = models.CharField(max_length=255, blank=True)
+
     delivery_days = models.PositiveIntegerField()
 
     proposal_notes = models.TextField(
@@ -457,6 +476,25 @@ class Bid(models.Model):
     created_at = models.DateTimeField(
         auto_now_add=True,
     )
+
+    @property
+    def cost_breakdown_total(self):
+        return sum(
+            (
+                self.material_cost,
+                self.labour_cost,
+                self.machine_cost,
+                self.quality_assurance_cost,
+                self.tooling_cost,
+                self.development_cost,
+                self.prototype_cost,
+                self.production_cost,
+                self.packaging_and_transport_cost,
+                self.overhead_cost,
+                self.other_cost,
+            ),
+            Decimal("0.00"),
+        )
 
     # ======================================================
     # STRING REPRESENTATION
@@ -1287,6 +1325,13 @@ class VendorMachine(models.Model):
         max_length=100,
     )
 
+    # Number of equivalent machines represented by this inventory entry.
+    machine_quantity = models.PositiveIntegerField(default=1)
+
+    # Structured machine specifications for deterministic matching. Values are
+    # optional so existing vendor machine records remain valid.
+    axis_count = models.PositiveSmallIntegerField(null=True, blank=True)
+
     manufacturer = models.CharField(
         max_length=150,
         blank=True,
@@ -1307,8 +1352,87 @@ class VendorMachine(models.Model):
         blank=True,
     )
 
+    x_travel_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    y_travel_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    z_travel_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    maximum_turning_diameter_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    maximum_turning_length_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    between_centers_distance_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    maximum_workpiece_weight_kg = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    spindle_speed_rpm = models.PositiveIntegerField(null=True, blank=True)
+
+    spindle_power_kw = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    chuck_size_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    bar_capacity_mm = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
     accuracy = models.CharField(
         max_length=150,
+        blank=True,
+    )
+
+    accuracy_microns = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
         blank=True,
     )
 
@@ -1661,3 +1785,176 @@ class ProcessBid(models.Model):
             f"{self.vendor.company_name} - "
             f"{self.requirement_process}"
         )
+
+
+# ==========================================================
+# STRUCTURED VENDOR DISCOVERY DATA
+# ==========================================================
+
+
+class VendorMaterial(models.Model):
+    """A material category that a vendor is able to manufacture."""
+
+    MATERIAL_CHOICES = [
+        ("ALUMINIUM", "Aluminium"),
+        ("MILD_STEEL", "Mild Steel"),
+        ("STAINLESS_STEEL", "Stainless Steel"),
+        ("TOOL_STEEL", "Tool Steel"),
+        ("TITANIUM", "Titanium"),
+        ("INCONEL", "Inconel"),
+        ("BRASS", "Brass"),
+        ("COPPER", "Copper"),
+        ("ENGINEERING_PLASTICS", "Engineering Plastics"),
+        ("OTHER", "Other"),
+    ]
+
+    profile = models.ForeignKey(
+        VendorProfile,
+        on_delete=models.CASCADE,
+        related_name="materials",
+    )
+    material_type = models.CharField(max_length=50, choices=MATERIAL_CHOICES)
+    specification_notes = models.CharField(max_length=255, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["profile", "material_type"],
+                name="unique_vendor_material",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.profile.user.company_name} - {self.get_material_type_display()}"
+
+
+class VendorCertification(models.Model):
+    """A certification that may be shown and filtered on public profiles."""
+
+    CERTIFICATION_CHOICES = [
+        ("ISO_9001", "ISO 9001"),
+        ("IATF_16949", "IATF 16949"),
+        ("AS9100", "AS9100"),
+        ("ISO_13485", "ISO 13485"),
+        ("OTHER", "Other"),
+    ]
+
+    profile = models.ForeignKey(
+        VendorProfile,
+        on_delete=models.CASCADE,
+        related_name="certification_records",
+    )
+    certification_type = models.CharField(max_length=50, choices=CERTIFICATION_CHOICES)
+    certificate_number = models.CharField(max_length=150, blank=True)
+    expires_on = models.DateField(null=True, blank=True)
+    is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["profile", "certification_type"],
+                name="unique_vendor_certification",
+            )
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.profile.user.company_name} - "
+            f"{self.get_certification_type_display()}"
+        )
+
+
+class VendorQualityInstrument(models.Model):
+    """Inspection equipment available to a vendor."""
+
+    INSTRUMENT_CHOICES = [
+        ("CMM", "CMM"),
+        ("VERNIER", "Vernier Caliper"),
+        ("MICROMETER", "Micrometer"),
+        ("HEIGHT_GAUGE", "Height Gauge"),
+        ("SURFACE_ROUGHNESS_TESTER", "Surface Roughness Tester"),
+        ("OTHER", "Other"),
+    ]
+
+    profile = models.ForeignKey(
+        VendorProfile,
+        on_delete=models.CASCADE,
+        related_name="quality_instrument_records",
+    )
+    instrument_type = models.CharField(max_length=50, choices=INSTRUMENT_CHOICES)
+    details = models.CharField(max_length=255, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["profile", "instrument_type"],
+                name="unique_vendor_quality_instrument",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.profile.user.company_name} - {self.get_instrument_type_display()}"
+
+
+class VendorIndustry(models.Model):
+    """An industry served by a vendor, used for discovery and matching."""
+
+    INDUSTRY_CHOICES = [
+        ("AUTOMOTIVE", "Automotive"),
+        ("EV", "EV"),
+        ("AEROSPACE", "Aerospace"),
+        ("DEFENCE", "Defence"),
+        ("MEDICAL_DEVICES", "Medical Devices"),
+        ("INDUSTRIAL", "Industrial"),
+        ("ELECTRONICS", "Electronics"),
+        ("CONSUMER", "Consumer"),
+        ("OTHER", "Other"),
+    ]
+
+    profile = models.ForeignKey(
+        VendorProfile,
+        on_delete=models.CASCADE,
+        related_name="industries_served",
+    )
+    industry = models.CharField(max_length=50, choices=INDUSTRY_CHOICES)
+    is_active = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["profile", "industry"],
+                name="unique_vendor_industry",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.profile.user.company_name} - {self.get_industry_display()}"
+
+
+class VendorShopPhoto(models.Model):
+    """A vendor-controlled shop image, separately approved for public display."""
+
+    profile = models.ForeignKey(
+        VendorProfile,
+        on_delete=models.CASCADE,
+        related_name="shop_photos",
+    )
+    image = models.ImageField(upload_to="vendor_shop_photos/")
+    caption = models.CharField(max_length=255, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+    is_public = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["display_order", "id"]
+
+    def __str__(self):
+        return f"{self.profile.user.company_name} - shop photo #{self.pk}"

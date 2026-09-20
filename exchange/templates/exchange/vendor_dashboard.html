@@ -27,6 +27,13 @@
 
     </div>
 
+    {% if public_profile_url %}
+    <div class="alert alert-light border d-flex justify-content-between align-items-center mb-4">
+        <span><strong>Your public profile URL:</strong> {{ request.scheme }}://{{ request.get_host }}{{ public_profile_url }}{% if not user.vendor_profile.is_public_profile_approved %} <span class="text-muted">(awaiting Primexa approval before it appears in search)</span>{% endif %}</span>
+        <a class="btn btn-sm btn-outline-dark" href="{{ public_profile_url }}">View profile</a>
+    </div>
+    {% endif %}
+
 
     <!-- ===================================================== -->
     <!-- MY AWARDED ORDERS -->
@@ -304,10 +311,22 @@
                         </div>
 
 
-                        {% if job.status == "VENDOR_AWARDED" or job.status == "FINAL_VENDOR_ONBOARDED" %}
+                        {% if job.selected_vendor == user %}
 
                             <span class="badge bg-success">
                                 Awarded
+                            </span>
+
+                        {% elif job.status == "COMPLETED" %}
+
+                            <span class="badge bg-secondary">
+                                Completed — not selected
+                            </span>
+
+                        {% elif job.status == "REJECTED" or job.status == "OEM_REJECTED" %}
+
+                            <span class="badge bg-danger">
+                                Closed — not selected
                             </span>
 
                         {% elif job.status == "OEM_APPROVAL_PENDING" %}

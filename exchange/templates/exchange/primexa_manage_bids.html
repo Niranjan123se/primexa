@@ -86,6 +86,7 @@
                             <th class="px-4">Select</th>
                             <th>Vendor</th>
                             <th>Quoted Price</th>
+                            <th>Cost Break-up</th>
                             <th>Delivery</th>
                             <th>Proposal</th>
                         </tr>
@@ -119,6 +120,18 @@
                                     {{ bid.vendor.unique_id }}
                                 </small>
 
+                            </td>
+
+                            <td>
+                                <small class="text-muted d-block">Material: ₹{{ bid.material_cost|floatformat:2 }}</small>
+                                <small class="text-muted d-block">Labour: ₹{{ bid.labour_cost|floatformat:2 }}</small>
+                                <small class="text-muted d-block">Machine: ₹{{ bid.machine_cost|floatformat:2 }}</small>
+                                <small class="text-muted d-block">QA: ₹{{ bid.quality_assurance_cost|floatformat:2 }}</small>
+                                <small class="text-muted d-block">Overheads: ₹{{ bid.overhead_cost|floatformat:2 }}</small>
+                                <small class="text-muted d-block">Development / Prototype: ₹{{ bid.development_cost|floatformat:2 }} / ₹{{ bid.prototype_cost|floatformat:2 }}</small>
+                                <small class="text-muted d-block">Production: ₹{{ bid.production_cost|floatformat:2 }}</small>
+                                <small class="text-muted d-block">Tooling / Transport: ₹{{ bid.tooling_cost|floatformat:2 }} / ₹{{ bid.packaging_and_transport_cost|floatformat:2 }}</small>
+                                {% if bid.other_cost %}<small class="text-muted d-block">Other: ₹{{ bid.other_cost|floatformat:2 }}{% if bid.other_cost_description %} — {{ bid.other_cost_description }}{% endif %}</small>{% endif %}
                             </td>
 
                             <td>

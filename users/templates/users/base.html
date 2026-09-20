@@ -10,7 +10,9 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Primexa Secure Exchange</title>
+    <title>{% block title %}Primexa Secure Exchange{% endblock %}</title>
+
+    {% block extra_head %}{% endblock %}
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -107,7 +109,7 @@
 
             <a
                 class="navbar-brand"
-                href="{% url 'dashboard' %}"
+                href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'public_home' %}{% endif %}"
             >
 
                 <span style="color: #64ffda;">
@@ -118,6 +120,27 @@
                     EXCHANGE
                 </span>
 
+            </a>
+
+            <a
+                href="{% url 'vendor_directory' %}"
+                class="btn btn-sm btn-outline-light ms-3"
+            >
+                Find Vendors
+            </a>
+
+            <a
+                href="{% url 'expert_directory' %}"
+                class="btn btn-sm btn-outline-light ms-2"
+            >
+                Find Experts
+            </a>
+
+            <a
+                href="{% url 'request_service' %}"
+                class="btn btn-sm btn-outline-light ms-2"
+            >
+                Request Help
             </a>
 
 
@@ -141,6 +164,15 @@
         >
             Notifications
         </a>
+
+        {% if user.role == "VENDOR" %}
+        <a href="{% url 'vendor_machine_management' %}" class="btn btn-sm btn-outline-light px-3">
+            My Machines
+        </a>
+        <a href="{% url 'vendor_portfolio_management' %}" class="btn btn-sm btn-outline-light px-3">
+            My Gallery
+        </a>
+        {% endif %}
 
     </div>
 

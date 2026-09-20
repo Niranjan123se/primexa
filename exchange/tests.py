@@ -42,12 +42,25 @@ class PrimexaExchangeTestCase(TestCase):
         # Place Bid
         bid_response = self.client.post(reverse('place_bid', args=[self.job.id]), {
             'offered_price': '800.00',
+            'material_cost': '300.00',
+            'labour_cost': '150.00',
+            'machine_cost': '150.00',
+            'quality_assurance_cost': '50.00',
+            'tooling_cost': '25.00',
+            'development_cost': '25.00',
+            'prototype_cost': '25.00',
+            'production_cost': '25.00',
+            'packaging_and_transport_cost': '25.00',
+            'overhead_cost': '20.00',
+            'other_cost': '5.00',
+            'other_cost_description': 'Insurance',
             'delivery_days': '7',
             'proposal_notes': 'In-stock material ready.'
         })
         
         self.assertEqual(Bid.objects.count(), 1)
         bid = Bid.objects.first()
+        self.assertEqual(float(bid.cost_breakdown_total), 800.00)
         
         # Engineer Awards Contract & Applies Margin
         self.client.login(username='eng_staff', password='password123')
@@ -57,7 +70,7 @@ class PrimexaExchangeTestCase(TestCase):
         })
         
         self.job.refresh_from_db()
-        self.assertEqual(self.job.status, 'VENDOR_AWARDED')
+        self.assertEqual(self.job.status, 'OEM_APPROVAL_PENDING')
         self.assertEqual(float(self.job.accepted_vendor_cost), 800.00)
         self.assertEqual(float(self.job.platform_margin_percentage), 20.0)
         self.assertEqual(float(self.job.final_primexa_quote), 960.00)  # 800 * 1.20

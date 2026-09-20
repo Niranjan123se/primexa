@@ -80,6 +80,8 @@ INSTALLED_APPS = [
 
     "django.contrib.staticfiles",
 
+    "django.contrib.sitemaps",
+
     # ------------------------------------------------------
     # PRIMEXA APPLICATIONS
     # ------------------------------------------------------
@@ -105,6 +107,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
 
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+
+    "primexa_project.middleware.AuthenticatedPageNoIndexMiddleware",
 
     "django.contrib.messages.middleware.MessageMiddleware",
 
@@ -385,6 +389,12 @@ PASSWORD_RESET_TIMEOUT = 60 * 60
 # ==========================================================
 # SESSION SECURITY
 # ==========================================================
+
+# Enable only when the deployment proxy overwrites this header.
+# Otherwise a client could supply a spoofed X-Forwarded-For value.
+TRUST_X_FORWARDED_FOR = (
+    os.getenv("PRIMEXA_TRUST_X_FORWARDED_FOR", "0") == "1"
+)
 
 SESSION_COOKIE_AGE = 60 * 60 * 8
 

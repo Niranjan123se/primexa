@@ -6,6 +6,8 @@ from .models import (
     User,
     VendorProfile,
     OEMProfile,
+    ExpertProfile,
+    ServiceRequest,
 )
 
 
@@ -110,6 +112,17 @@ class VendorRegistrationForm(UserCreationForm):
             )
 
 
+class ExpertRegistrationForm(OEMRegistrationForm):
+    """External expert accounts are deliberately not internal ENGINEER accounts."""
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.role = "EXPERT"
+        if commit:
+            user.save()
+        return user
+
+
 # ==========================================================
 # USER ACCOUNT / PROFILE FORM
 # ==========================================================
@@ -158,6 +171,9 @@ class VendorProfileForm(forms.ModelForm):
         exclude = [
             "user",
             "vendor_id_code",
+            "is_public_profile",
+            "is_public_profile_approved",
+            "is_verified",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -242,3 +258,39 @@ class OEMProfileForm(forms.ModelForm):
                 forms.Textarea,
             ):
                 field.widget.attrs["rows"] = 3
+
+
+class ExpertProfileForm(forms.ModelForm):
+    class Meta:
+        model = ExpertProfile
+        exclude = ["user", "expert_id_code", "is_public_profile", "is_verified"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-control bg-light border-0 shadow-sm"
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs["class"] = "form-check-input"
+            if isinstance(field.widget, forms.Textarea):
+                field.widget.attrs["rows"] = 3
+
+
+class ServiceRequestForm(forms.ModelForm):
+    class Meta:
+        model = ServiceRequest
+        fields = [
+            "request_type", "project_title", "task_description", "required_processes",
+            "quantity_or_scope", "budget_range", "target_timeline", "contact_name",
+            "contact_email", "contact_phone", "company_name",
+        ]
+        widgets = {
+            "task_description": forms.Textarea(attrs={"rows": 4}),
+            "required_processes": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-control bg-light border-0 shadow-sm"
+            if isinstance(field.widget, forms.Select):
+                field.widget.attrs["class"] = "form-select bg-light border-0 shadow-sm"

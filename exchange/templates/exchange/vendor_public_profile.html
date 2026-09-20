@@ -1,0 +1,113 @@
+{% extends "users/base.html" %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="{{ meta_description }}">
+<link rel="canonical" href="{{ canonical_url }}">
+<meta property="og:type" content="profile">
+<meta property="og:title" content="{{ meta_title }}">
+<meta property="og:description" content="{{ meta_description }}">
+<meta property="og:url" content="{{ canonical_url }}">
+<script type="application/ld+json">{{ organization_schema|safe }}</script>
+{% endblock %}
+
+{% block content %}
+<section class="mb-5">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-4 p-lg-5">
+            <div class="row align-items-start g-4">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        {% if profile.is_verified %}
+                        <span class="badge bg-success">Verified vendor</span>
+                        {% endif %}
+                        {% if profile.industrial_area %}
+                        <span class="badge bg-light text-dark">{{ profile.industrial_area }}</span>
+                        {% endif %}
+                    </div>
+                    <h1 class="display-6 fw-bold mb-2">{{ profile.user.company_name }}</h1>
+                    {% if profile.city or profile.state or profile.country %}
+                    <p class="text-muted mb-3">
+                        {{ profile.city }}{% if profile.city and profile.state %}, {% endif %}{{ profile.state }}{% if profile.country and profile.state %}, {% endif %}{{ profile.country }}
+                    </p>
+                    {% endif %}
+                    <p class="lead mb-0">{{ profile.public_description|default:"Manufacturing vendor in the Primexa network."|linebreaksbr }}</p>
+                </div>
+                <div class="col-lg-4">
+                    {% if profile.public_enquiry_email or profile.public_enquiry_phone %}
+                    <div class="border rounded-3 p-3 bg-light">
+                        <h2 class="h6 fw-bold">Business enquiry</h2>
+                        {% if profile.public_enquiry_email %}<div><a href="mailto:{{ profile.public_enquiry_email }}">{{ profile.public_enquiry_email }}</a></div>{% endif %}
+                        {% if profile.public_enquiry_phone %}<div>{{ profile.public_enquiry_phone }}</div>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if profile.shop_photos.all %}
+<section class="mb-5">
+    <h2 class="h3 fw-bold mb-3">Shop photos</h2>
+    <div class="row g-3">
+        {% for photo in profile.shop_photos.all %}
+        <div class="col-sm-6 col-lg-4">
+            <figure class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden mb-0">
+                <img src="{{ photo.image.url }}" class="card-img-top" alt="{{ photo.caption|default:profile.user.company_name }} shop photo">
+                {% if photo.caption %}<figcaption class="card-body small text-muted">{{ photo.caption }}</figcaption>{% endif %}
+            </figure>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<div class="row g-4">
+    {% if profile.process_capabilities.all %}
+    <section class="col-lg-6">
+        <div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4">
+            <h2 class="h4 fw-bold">Manufacturing processes</h2>
+            <ul class="mb-0">{% for capability in profile.process_capabilities.all %}<li>{{ capability.get_process_type_display }}{% if capability.tolerance_capability %} <span class="text-muted">— {{ capability.tolerance_capability }}</span>{% endif %}</li>{% endfor %}</ul>
+        </div></div>
+    </section>
+    {% endif %}
+    {% if profile.materials.all %}
+    <section class="col-lg-6">
+        <div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4">
+            <h2 class="h4 fw-bold">Materials</h2>
+            <p class="mb-0">{% for material in profile.materials.all %}<span class="badge text-bg-light border me-1 mb-1">{{ material.get_material_type_display }}</span>{% endfor %}</p>
+        </div></div>
+    </section>
+    {% endif %}
+    {% if profile.service_categories.all or profile.production_capacity or profile.operating_hours or profile.is_open_to_subcontract %}
+    <section class="col-lg-6">
+        <div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4">
+            <h2 class="h4 fw-bold">Services and capacity</h2>
+            {% if profile.service_categories.all %}<p class="mb-3">{% for service in profile.service_categories.all %}<span class="badge text-bg-light border me-1 mb-1">{{ service.get_category_display }}</span>{% endfor %}</p>{% endif %}
+            {% if profile.production_capacity %}<p class="mb-1"><strong>Production capacity:</strong> {{ profile.production_capacity }}</p>{% endif %}
+            {% if profile.operating_hours %}<p class="mb-1"><strong>Operating hours:</strong> {{ profile.get_operating_hours_display }}</p>{% endif %}
+            {% if profile.is_open_to_subcontract %}<p class="mb-0 text-success">Open to subcontracting</p>{% endif %}
+        </div></div>
+    </section>
+    {% endif %}
+    {% if profile.machines.all %}
+    <section class="col-12">
+        <div class="card border-0 shadow-sm rounded-4"><div class="card-body p-4">
+            <h2 class="h4 fw-bold">Machines</h2>
+            <div class="row g-3">{% for machine in profile.machines.all %}<div class="col-md-6 col-lg-4"><div class="border rounded-3 p-3 h-100"><strong>{{ machine.machine_name }}</strong><div class="small text-muted">{{ machine.machine_type }}{% if machine.axis_count %} · {{ machine.axis_count }} Axis{% endif %}{% if machine.machine_quantity > 1 %} · {{ machine.machine_quantity }} machines{% endif %}</div>{% if machine.manufacturer or machine.model_number %}<div class="small mt-2">{{ machine.manufacturer }} {{ machine.model_number }}</div>{% endif %}{% if machine.work_envelope %}<div class="small">Envelope: {{ machine.work_envelope }}</div>{% endif %}{% if machine.x_travel_mm or machine.y_travel_mm or machine.z_travel_mm %}<div class="small">Travel: {{ machine.x_travel_mm|default:"–" }} × {{ machine.y_travel_mm|default:"–" }} × {{ machine.z_travel_mm|default:"–" }} mm</div>{% endif %}{% if machine.maximum_turning_diameter_mm %}<div class="small">Turning dia.: {{ machine.maximum_turning_diameter_mm }} mm</div>{% endif %}{% if machine.maximum_turning_length_mm %}<div class="small">Turning length: {{ machine.maximum_turning_length_mm }} mm</div>{% endif %}{% if machine.between_centers_distance_mm %}<div class="small">Between centres: {{ machine.between_centers_distance_mm }} mm</div>{% endif %}{% if machine.maximum_workpiece_weight_kg %}<div class="small">Max workpiece: {{ machine.maximum_workpiece_weight_kg }} kg</div>{% endif %}</div></div>{% endfor %}</div>
+        </div></div>
+    </section>
+    {% endif %}
+    {% if profile.certification_records.all or profile.quality_instrument_records.all or profile.industries_served.all %}
+    <section class="col-12">
+        <div class="card border-0 shadow-sm rounded-4"><div class="card-body p-4"><div class="row g-4">
+            {% if profile.certification_records.all %}<div class="col-md-4"><h2 class="h5 fw-bold">Certifications</h2><ul class="mb-0">{% for certification in profile.certification_records.all %}<li>{{ certification.get_certification_type_display }}</li>{% endfor %}</ul></div>{% endif %}
+            {% if profile.quality_instrument_records.all %}<div class="col-md-4"><h2 class="h5 fw-bold">Quality equipment</h2><ul class="mb-0">{% for instrument in profile.quality_instrument_records.all %}<li>{{ instrument.get_instrument_type_display }}</li>{% endfor %}</ul></div>{% endif %}
+            {% if profile.industries_served.all %}<div class="col-md-4"><h2 class="h5 fw-bold">Industries served</h2><ul class="mb-0">{% for industry in profile.industries_served.all %}<li>{{ industry.get_industry_display }}</li>{% endfor %}</ul></div>{% endif %}
+        </div></div></div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

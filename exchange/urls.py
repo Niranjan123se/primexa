@@ -13,6 +13,12 @@ from .view_modules.engineering_process import (
     review_engineering_process_plan,
     delete_engineering_process,
 )
+from .view_modules.vendor_capabilities import (
+    delete_vendor_machine,
+    delete_vendor_portfolio_item,
+    vendor_machine_management,
+    vendor_portfolio_management,
+)
 
 
 urlpatterns = [
@@ -46,6 +52,12 @@ urlpatterns = [
         views.vendor_dashboard,
         name="vendor_dashboard",
     ),
+    path("vendor/machines/", vendor_machine_management, name="vendor_machine_management"),
+    path("vendor/machines/<int:machine_id>/", vendor_machine_management, name="edit_vendor_machine"),
+    path("vendor/machines/<int:machine_id>/delete/", delete_vendor_machine, name="delete_vendor_machine"),
+    path("vendor/gallery/", vendor_portfolio_management, name="vendor_portfolio_management"),
+    path("vendor/gallery/<int:photo_id>/", vendor_portfolio_management, name="edit_vendor_portfolio_item"),
+    path("vendor/gallery/<int:photo_id>/delete/", delete_vendor_portfolio_item, name="delete_vendor_portfolio_item"),
 
     # ==========================================================
     # ENGINEER DASHBOARD
