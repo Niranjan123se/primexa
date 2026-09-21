@@ -167,14 +167,21 @@ class VendorProfile(models.Model):
     
     interested_in_low_cost_inserts = models.BooleanField(default=False, help_text="Interested in low-cost insert supply?")
     current_inserts_used = models.TextField(blank=True, help_text="Brands, Types, and Present Prices paid")
+
     other_services_needed = models.TextField(blank=True, help_text="Any other service needed from our side")
     shop_photo = models.ImageField(upload_to='shop_photos/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.vendor_id_code:
             self.vendor_id_code = self.user.unique_id
-        if not self.public_slug:
-            self.public_slug = slugify(f"{self.user.company_name}-{self.user_id}")
+        if not self.public_slug or self.public_slug == "None":
+            base_slug = slugify(self.user.company_name) or slugify(self.user.username) or f"vendor-{self.user_id}"
+            slug = base_slug
+            counter = 1
+            while VendorProfile.objects.filter(public_slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.public_slug = slug
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -184,6 +191,16 @@ class VendorProfile(models.Model):
 class OEMProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='oem_profile')
     oem_id_code = models.CharField(max_length=50, unique=True, blank=True, editable=False)
+    
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Unique URL slug for the OEM business profile.",
+    )
+    is_approved = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
     
     contact_person_name = models.CharField(max_length=150, blank=True, help_text="Primary procurement or engineering lead")
     designation = models.CharField(max_length=100, blank=True, help_text="e.g., Head of Supply Chain, Senior Engineer")
@@ -206,6 +223,14 @@ class OEMProfile(models.Model):
     def save(self, *args, **kwargs):
         if not self.oem_id_code:
             self.oem_id_code = self.user.unique_id
+        if not self.slug or self.slug == "None":
+            base_slug = slugify(self.user.company_name) or slugify(self.user.username) or f"oem-{self.user_id}"
+            slug = base_slug
+            counter = 1
+            while OEMProfile.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -236,6 +261,13 @@ class ExpertProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="expert_profile")
     expert_id_code = models.CharField(max_length=50, unique=True, blank=True, editable=False)
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Unique URL slug for the public expert profile.",
+    )
     headline = models.CharField(max_length=200, blank=True)
     expertise = models.TextField(help_text="Processes, domains, and technical skills.")
     industries = models.TextField(blank=True)
@@ -252,6 +284,15 @@ class ExpertProfile(models.Model):
     def save(self, *args, **kwargs):
         if not self.expert_id_code:
             self.expert_id_code = self.user.unique_id
+        if not self.slug or self.slug == "None":
+            name = self.user.get_full_name() or self.user.company_name or self.user.username
+            base_slug = slugify(name) or f"expert-{self.user_id}"
+            slug = base_slug
+            counter = 1
+            while ExpertProfile.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -265,8 +306,15 @@ class ServiceRequest(models.Model):
         ("END_TO_END", "Prototype to delivery / complete assembly"),
     )
     STATUS_CHOICES = (("NEW", "New"), ("CONTACTED", "Contacted"), ("QUALIFIED", "Qualified"), ("CLOSED", "Closed"))
+    RESPONSE_CHOICES = (
+        ("PENDING", "Pending Feedback"),
+        ("ACCEPTED", "Accepted"),
+        ("DECLINED", "Declined"),
+        ("UNAVAILABLE", "Currently Unavailable"),
+    )
 
     submitted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_requests")
+    assigned_expert = models.ForeignKey(ExpertProfile, null=True, blank=True, on_delete=models.SET_NULL, related_name="assigned_requests")
     request_type = models.CharField(max_length=20, choices=REQUEST_TYPE_CHOICES)
     project_title = models.CharField(max_length=255)
     task_description = models.TextField()
@@ -279,6 +327,9 @@ class ServiceRequest(models.Model):
     contact_phone = models.CharField(max_length=20, blank=True)
     company_name = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="NEW")
+    expert_response = models.CharField(max_length=20, choices=RESPONSE_CHOICES, default="PENDING")
+    expert_feedback_notes = models.TextField(blank=True)
+    expert_responded_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -286,3 +337,49 @@ class ServiceRequest(models.Model):
 
     def __str__(self):
         return f"{self.get_request_type_display()}: {self.project_title}"
+
+
+class ExpertPhoto(models.Model):
+    expert_profile = models.ForeignKey(ExpertProfile, on_delete=models.CASCADE, related_name="photos")
+    image = models.ImageField(upload_to="expert_photos/")
+    caption = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Photo for {self.expert_profile.user.username}"
+
+
+class ExpertCertificate(models.Model):
+    expert_profile = models.ForeignKey(ExpertProfile, on_delete=models.CASCADE, related_name="certificates")
+    title = models.CharField(max_length=255)
+    issuing_organization = models.CharField(max_length=255, blank=True)
+    issue_date = models.DateField(null=True, blank=True)
+    certificate_file = models.FileField(upload_to="expert_certificates/", blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.expert_profile.user.username}"
+
+
+class Review(models.Model):
+    RATING_CHOICES = [(1, "1 Star"), (2, "2 Stars"), (3, "3 Stars"), (4, "4 Stars"), (5, "5 Stars")]
+
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews_given")
+    vendor_profile = models.ForeignKey(VendorProfile, null=True, blank=True, on_delete=models.CASCADE, related_name="reviews")
+    oem_profile = models.ForeignKey(OEMProfile, null=True, blank=True, on_delete=models.CASCADE, related_name="reviews")
+    expert_profile = models.ForeignKey(ExpertProfile, null=True, blank=True, on_delete=models.CASCADE, related_name="reviews")
+
+    rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, default=5)
+    title = models.CharField(max_length=255, blank=True)
+    comment = models.TextField()
+    is_approved = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        target = self.vendor_profile or self.expert_profile or self.oem_profile
+        return f"Review by {self.reviewer.username} ({self.rating} stars) for {target}"
+

@@ -1,0 +1,105 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Direct RFQ Bids - {{ job.title }} | Primexa{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="badge bg-info text-dark mb-2">⚡ Direct Network RFQ</span>
+            <h1 class="h2 fw-bold mb-1">{{ job.title }}</h1>
+            <p class="text-muted mb-0">Tracking: <strong>{{ job.tracking_number }}</strong> | Batch Quantity: {{ job.batch_quantity }} units</p>
+        </div>
+        <a href="{% url 'oem_dashboard' %}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if bids %}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-0 px-4 pt-4 d-flex justify-content-between align-items-center">
+                <h3 class="h5 fw-bold mb-0">Vendor Quotations & Bids ({{ bids|length }})</h3>
+                <span class="text-muted small">Bids are ordered by price (Lowest First)</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    {% for bid in bids %}
+                    <div class="col-lg-6">
+                        <div class="card border rounded-4 h-100 shadow-sm">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h4 class="h5 fw-bold mb-1">{{ bid.vendor.company_name|default:bid.vendor.username }}</h4>
+                                        <span class="badge bg-light text-dark border">{{ bid.vendor.unique_id }}</span>
+                                        {% if bid.vendor.vendor_profile.is_verified %}
+                                            <span class="badge bg-success ms-1"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fs-4 fw-bold text-success">₹ {{ bid.offered_price }}</div>
+                                        <small class="text-muted">Total Bid Amount</small>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3 bg-light p-3 rounded-3 small">
+                                    <div class="col-6"><strong>Committed Delivery:</strong> {{ bid.delivery_days }} Days</div>
+                                    <div class="col-6"><strong>Location:</strong> {{ bid.vendor.vendor_profile.city|default:"N/A" }}</div>
+                                    {% if bid.material_cost %}
+                                    <div class="col-6"><strong>Material Cost:</strong> ₹ {{ bid.material_cost }}</div>
+                                    {% endif %}
+                                    {% if bid.labour_cost %}
+                                    <div class="col-6"><strong>Labour Cost:</strong> ₹ {{ bid.labour_cost }}</div>
+                                    {% endif %}
+                                    {% if bid.machine_cost %}
+                                    <div class="col-6"><strong>Machine Cost:</strong> ₹ {{ bid.machine_cost }}</div>
+                                    {% endif %}
+                                </div>
+
+                                {% if bid.proposal_notes %}
+                                <div class="mb-3">
+                                    <strong class="small d-block text-muted">Proposal & Technical Notes:</strong>
+                                    <p class="small mb-0">{{ bid.proposal_notes|linebreaksbr }}</p>
+                                </div>
+                                {% endif %}
+
+                                <div class="mt-auto pt-3 border-top d-flex gap-2">
+                                    <a href="{% url 'public_vendor_profile' slug=bid.vendor.vendor_profile.public_slug|default:bid.vendor.username %}" class="btn btn-sm btn-outline-secondary flex-grow-1" target="_blank">View Vendor Profile</a>
+                                    {% if job.status != "VENDOR_AWARDED" and job.status != "FINAL_VENDOR_ONBOARDED" and job.status != "COMPLETED" %}
+                                        <form method="post" action="{% url 'oem_award_direct_vendor' file_id=job.id bid_id=bid.id %}" class="flex-grow-1">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success w-100 fw-semibold" onclick="return confirm('Are you sure you want to award this manufacturing order to {{ bid.vendor.company_name|escapejs }} for ₹ {{ bid.offered_price }}?');">
+                                                Select Vendor & Award Order
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        {% if job.selected_vendor == bid.vendor %}
+                                            <span class="badge bg-success p-2 flex-grow-1 fs-6">Awarded Vendor</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-clock-history fs-1 text-muted d-block mb-3"></i>
+                <h3 class="h5 fw-bold mb-2">No Vendor Bids Submitted Yet</h3>
+                <p class="text-muted mb-0">Vendors in the Primexa network will receive your Direct RFQ notification and submit bids here.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

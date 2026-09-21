@@ -1,0 +1,174 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-dark text-white p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-primary mb-2">OEM Profile</span>
+                            <h2 class="fw-bold mb-0">{{ profile.user.company_name|default:profile.user.username }}</h2>
+                            <small class="text-light opacity-75">ID: {{ profile.oem_id_code }} | Slug: {{ profile.slug }}</small>
+                        </div>
+                        <div>
+                            {% if profile.is_approved and profile.is_verified %}
+                                <span class="badge bg-success px-3 py-2 fs-6">Verified & Approved OEM</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark px-3 py-2 fs-6">Pending Approval</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3 border-bottom pb-2">Business Details</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block">Contact Person:</strong>
+                            <span>{{ profile.contact_person_name|default:"Not provided" }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block">Designation:</strong>
+                            <span>{{ profile.designation|default:"Not provided" }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block">Industry Sector:</strong>
+                            <span>{{ profile.get_industry_sector_display|default:profile.industry|default:"Not specified" }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong class="text-muted d-block">GST Number:</strong>
+                            {% if user.is_authenticated %}
+                                <span>{{ profile.gst_number|default:"Not provided" }}</span>
+                            {% else %}
+                                <span class="text-muted">🔒 Log in to view GST</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-12">
+                            <strong class="text-muted d-block">Billing Address:</strong>
+                            {% if user.is_authenticated %}
+                                <span>{{ profile.billing_address|default:"Not provided" }}</span>
+                            {% else %}
+                                <div class="p-3 bg-light rounded text-muted mt-1">
+                                    🔒 Official billing address and direct procurement contacts are visible after logging in.
+                                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-sm btn-dark ms-2">Log In</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-12">
+                            <strong class="text-muted d-block">Typical Requirements:</strong>
+                            <span>{{ profile.typical_requirements|default:"Not provided" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top mb-4">
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">Back</a>
+                        {% if user.role == 'ENGINEER' or user.is_superuser %}
+                            {% if not profile.is_approved %}
+                                <a href="{% url 'approve_oem' company_slug=profile.slug %}" class="btn btn-success">Approve OEM Business</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <!-- Ratings & Customer Reviews Section -->
+                    <div class="border-top pt-4">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                            <div>
+                                <h3 class="h5 fw-bold mb-1"><i class="bi bi-star-fill text-warning me-2"></i>Ratings & Reviews</h3>
+                                <p class="text-muted small mb-0">Vendor feedback & rating summary for {{ profile.user.company_name }}</p>
+                            </div>
+                            {% if avg_rating %}
+                            <div class="text-end">
+                                <span class="fs-4 fw-bold text-dark">{{ avg_rating }}</span><span class="fs-6 text-muted"> / 5.0</span>
+                                <div class="text-muted small">({{ review_count }} review{{ review_count|pluralize }})</div>
+                            </div>
+                            {% else %}
+                            <span class="badge bg-light text-dark">No reviews yet</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="row g-4">
+                            <!-- Review List -->
+                            <div class="col-md-7">
+                                {% if reviews %}
+                                    <div class="d-flex flex-column gap-3">
+                                    {% for r in reviews %}
+                                        <div class="p-3 border rounded-3 bg-light">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <div class="fw-bold">{{ r.title }}</div>
+                                                <div class="text-warning small">
+                                                    {% for i in "12345" %}
+                                                        {% if forloop.counter <= r.rating %}
+                                                            <i class="bi bi-star-fill"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-star text-muted"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% if r.comment %}
+                                            <p class="mb-2 text-secondary small">{{ r.comment|linebreaksbr }}</p>
+                                            {% endif %}
+                                            <div class="small text-muted">
+                                                By <strong>{{ r.reviewer.get_full_name|default:r.reviewer.username }}</strong> &bull; {{ r.created_at|date:"M d, Y" }}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted small italic mb-0">No reviews published yet for this OEM.</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Submit Review Form -->
+                            <div class="col-md-5">
+                                {% if user.is_authenticated %}
+                                    {% if user != profile.user %}
+                                    <div class="card border-0 bg-light p-3 rounded-3 border">
+                                        <h4 class="h6 fw-bold mb-3">Write a Review</h4>
+                                        <form method="post" action="{% url 'submit_review' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="oem_slug" value="{{ profile.slug }}">
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold">Rating</label>
+                                                <select name="rating" class="form-select form-select-sm" required>
+                                                    <option value="5">★★★★★ (5 Stars - Excellent Client)</option>
+                                                    <option value="4">★★★★☆ (4 Stars - Very Good)</option>
+                                                    <option value="3">★★★☆☆ (3 Stars - Average)</option>
+                                                    <option value="2">★★☆☆☆ (2 Stars - Slow Payment/Specs)</option>
+                                                    <option value="1">★☆☆☆☆ (1 Star - Difficult)</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold">Review Title</label>
+                                                <input type="text" name="title" class="form-control form-control-sm" placeholder="Summary of partnership" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-semibold">Detailed Comments</label>
+                                                <textarea name="comment" class="form-control form-control-sm" rows="3" placeholder="Clarity of drawings, prompt communication, payment terms..."></textarea>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-sm btn-primary w-100 fw-semibold">Submit Review</button>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="p-3 bg-light rounded-3 text-center border">
+                                        <p class="small text-muted mb-2">Want to submit a review?</p>
+                                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-sm btn-outline-dark fw-semibold">Log In to Review OEM</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

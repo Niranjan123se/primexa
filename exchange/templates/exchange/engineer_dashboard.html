@@ -1,571 +1,601 @@
 {% extends 'users/base.html' %}
 
-{% block content %}
+{% block title %}Engineering Control Center | Primexa{% endblock %}
 
+{% block content %}
 <div class="container-fluid py-4">
 
     <!-- ===================================================== -->
     <!-- HEADER -->
     <!-- ===================================================== -->
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-            <h2 class="fw-bold mb-1">
+            <h1 class="h2 fw-bold mb-1">
                 Engineering Control Center
-            </h2>
-
+            </h1>
             <p class="text-muted mb-0">
-                Review requirements, manage sourcing, monitor production
-                and control delivery risks.
+                Create & review requirements, track order stages, resend bidding mails, manage accounts, and handle help enquiries.
             </p>
         </div>
-
-        <span class="badge bg-dark px-3 py-2">
-            PRIMEXA INTERNAL
-        </span>
-
+        <div class="d-flex gap-2 align-items-center">
+            <a href="{% url 'upload_job' %}" class="btn btn-primary fw-semibold px-3">
+                <i class="bi bi-plus-circle me-1"></i>+ Create New Requirement
+            </a>
+            <span class="badge bg-dark px-3 py-2 fs-6">
+                <i class="bi bi-shield-lock me-1"></i>PRIMEXA INTERNAL
+            </span>
+        </div>
     </div>
 
+    <!-- ===================================================== -->
+    <!-- NAVIGATION SECTION BUTTONS / TABS -->
+    <!-- ===================================================== -->
+    <ul class="nav nav-pills nav-fill mb-4 p-2 bg-light rounded-4 border shadow-sm flex-wrap gap-1" id="engineerDashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold py-2 px-3 rounded-3" id="tab-jobs" data-bs-toggle="pill" data-bs-target="#pane-jobs" type="button" role="tab">
+                <i class="bi bi-file-earmark-code me-2"></i>RFQs & Requirements
+                <span class="badge bg-primary ms-1">{{ jobs|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold py-2 px-3 rounded-3" id="tab-help" data-bs-toggle="pill" data-bs-target="#pane-help" type="button" role="tab">
+                <i class="bi bi-headset me-2"></i>Service & Help Requests
+                <span class="badge bg-info text-dark ms-1">{{ service_requests|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold py-2 px-3 rounded-3" id="tab-vendors" data-bs-toggle="pill" data-bs-target="#pane-vendors" type="button" role="tab">
+                <i class="bi bi-shop me-2"></i>Vendor Accounts
+                {% if pending_vendors %}<span class="badge bg-warning text-dark ms-1">{{ pending_vendors|length }}</span>{% else %}<span class="badge bg-secondary ms-1">0</span>{% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold py-2 px-3 rounded-3" id="tab-oems" data-bs-toggle="pill" data-bs-target="#pane-oems" type="button" role="tab">
+                <i class="bi bi-building me-2"></i>OEM Accounts
+                {% if pending_oems %}<span class="badge bg-warning text-dark ms-1">{{ pending_oems|length }}</span>{% else %}<span class="badge bg-secondary ms-1">0</span>{% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold py-2 px-3 rounded-3" id="tab-experts" data-bs-toggle="pill" data-bs-target="#pane-experts" type="button" role="tab">
+                <i class="bi bi-patch-check me-2"></i>Expert Accounts
+                {% if pending_experts %}<span class="badge bg-warning text-dark ms-1">{{ pending_experts|length }}</span>{% else %}<span class="badge bg-secondary ms-1">0</span>{% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold py-2 px-3 rounded-3" id="tab-risks" data-bs-toggle="pill" data-bs-target="#pane-risks" type="button" role="tab">
+                <i class="bi bi-exclamation-triangle me-2"></i>Delivery Risks
+                {% if delivery_risk_alerts %}<span class="badge bg-danger ms-1">{{ delivery_risk_alerts|length }}</span>{% else %}<span class="badge bg-secondary ms-1">0</span>{% endif %}
+            </button>
+        </li>
+    </ul>
 
     <!-- ===================================================== -->
-    <!-- DELIVERY RISK ALERTS -->
+    <!-- TAB PANES CONTAINER -->
     <!-- ===================================================== -->
+    <div class="tab-content" id="engineerDashboardTabContent">
 
-    {% if delivery_risk_alerts %}
-
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-
-        <div class="card-header bg-white border-0 px-4 pt-4">
-
-            <div class="d-flex justify-content-between align-items-center">
-
+        <!-- 1. MANUFACTURING REQUIREMENTS / RFQS PANE -->
+        <div class="tab-pane fade show active" id="pane-jobs" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-
-                    <h4 class="fw-bold mb-1">
-                        🚨 Delivery Risk Center
-                    </h4>
-
-                    <p class="text-muted small mb-0">
-                        Vendors have reported potential delays on these orders.
-                    </p>
-
+                    <h3 class="h4 fw-bold mb-1">Manufacturing Requirements & Order Tracking Pipeline</h3>
+                    <p class="text-muted small mb-0">Create requirements, track present order stage, resend bidding emails, and issue vendor awards.</p>
                 </div>
-
-                <span class="badge bg-danger px-3 py-2">
-                    {{ delivery_risk_alerts|length }} Active Alert{% if delivery_risk_alerts|length != 1 %}s{% endif %}
-                </span>
-
+                <a href="{% url 'upload_job' %}" class="btn btn-sm btn-primary fw-semibold">
+                    <i class="bi bi-plus-lg me-1"></i>Create Requirement
+                </a>
             </div>
 
+            {% if jobs %}
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4">Requirement & Tracking</th>
+                                    <th>OEM Owner</th>
+                                    <th>Sourcing Flow</th>
+                                    <th>Present Stage</th>
+                                    <th class="text-end px-4">Actions & Communications</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in jobs %}
+                                <tr>
+                                    <td class="px-4">
+                                        <div class="fw-bold text-dark">{{ job.title }}</div>
+                                        <small class="text-muted"><i class="bi bi-hash me-1"></i>{{ job.tracking_number }} &bull; {{ job.batch_quantity }} units</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ job.uploaded_by.company_name|default:job.uploaded_by.username }}</div>
+                                        <small class="text-muted">{{ job.uploaded_by.unique_id }}</small>
+                                    </td>
+                                    <td>
+                                        {% if job.sourcing_flow == "DIRECT_RFQ" %}
+                                            <span class="badge bg-info text-dark" title="Direct Network RFQ">⚡ Direct RFQ</span>
+                                        {% else %}
+                                            <span class="badge bg-primary" title="Primexa Managed Sourcing">🛡️ Managed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <!-- Present Stage Badge -->
+                                        {% if job.status == "COMPLETED" %}
+                                            <span class="badge bg-success px-2 py-1"><i class="bi bi-check-all me-1"></i>Order Completed</span>
+                                        {% elif job.status == "REJECTED" or job.status == "OEM_REJECTED" %}
+                                            <span class="badge bg-danger px-2 py-1"><i class="bi bi-x-circle me-1"></i>{{ job.get_status_display }}</span>
+                                        {% elif job.status == "OEM_APPROVAL_PENDING" %}
+                                            <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-clock-history me-1"></i>OEM Approval Pending</span>
+                                        {% elif job.status == "OEM_APPROVED" %}
+                                            <span class="badge bg-success px-2 py-1"><i class="bi bi-hand-thumbs-up me-1"></i>OEM Approved</span>
+                                        {% elif job.status == "VENDOR_AWARDED" or job.status == "ASSIGNED_TO_VENDOR" %}
+                                            <span class="badge bg-primary px-2 py-1"><i class="bi bi-award me-1"></i>Vendor Awarded</span>
+                                        {% elif job.status == "FINAL_VENDOR_ONBOARDED" %}
+                                            <span class="badge bg-primary px-2 py-1">Vendor Onboarded</span>
+                                        {% elif job.status == "FAI_PENDING" %}
+                                            <span class="badge bg-warning text-dark px-2 py-1">FAI Pending</span>
+                                        {% elif job.status == "FAI_APPROVED" %}
+                                            <span class="badge bg-success px-2 py-1">FAI Approved</span>
+                                        {% elif job.status == "BID_PLACED" %}
+                                            <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-envelope-paper me-1"></i>{{ job.get_status_display }}</span>
+                                        {% elif job.status == "PUBLISHED" %}
+                                            <span class="badge bg-success px-2 py-1"><i class="bi bi-broadcast me-1"></i>Published to Vendors</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary px-2 py-1">{{ job.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end px-4">
+                                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                            <a href="{% url 'review_workload' job.id %}" class="btn btn-sm btn-outline-dark" title="Review Technical Specs">Review</a>
+                                            
+                                            <!-- Resend Bidding Mail Button -->
+                                            <a href="{% url 'resend_bidding_notification' file_id=job.id %}" class="btn btn-sm btn-outline-primary" title="Resend RFQ notification emails to vendors" onclick="return confirm('Resend bidding notification emails for {{ job.title|escapejs }} to network vendors?');">
+                                                <i class="bi bi-send-fill me-1"></i>Resend Bidding Mail
+                                            </a>
+
+                                            {% if job.status == "BID_PLACED" or job.bids.exists %}
+                                                <a href="{% url 'primexa_manage_bids' job.id %}" class="btn btn-sm btn-dark" style="background-color:#0a192f;">Manage Bids</a>
+                                                <a href="{% url 'engineering_process_plan' job.id %}" class="btn btn-sm btn-outline-dark">Process Plan</a>
+                                            {% endif %}
+                                            {% if job.status == "OEM_APPROVED" %}
+                                                <a href="{% url 'final_vendor_award' job.id %}" class="btn btn-sm btn-success">Issue Final Award</a>
+                                            {% endif %}
+                                            {% if job.status == "VENDOR_AWARDED" or job.status == "FINAL_VENDOR_ONBOARDED" or job.status == "ASSIGNED_TO_VENDOR" %}
+                                                <a href="{% url 'fai_review' job.id %}" class="btn btn-sm btn-outline-primary">FAI Review</a>
+                                            {% endif %}
+                                            {% if job.status == "FAI_PENDING" %}
+                                                <a href="{% url 'fai_review' job.id %}" class="btn btn-sm btn-warning">Review FAI</a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                <h4 class="fw-bold mb-1">No Requirements Found</h4>
+                <p class="text-muted mb-3">Create a new requirement or review OEM submissions.</p>
+                <div>
+                    <a href="{% url 'upload_job' %}" class="btn btn-primary fw-semibold px-4">+ Create Requirement</a>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
-
-        <div class="card-body p-0">
-
-            <div class="table-responsive">
-
-                <table class="table align-middle mb-0">
-
-                    <thead class="table-light">
-
-                        <tr>
-
-                            <th class="px-4">
-                                Requirement
-                            </th>
-
-                            <th>
-                                Vendor
-                            </th>
-
-                            <th>
-                                Original Delivery
-                            </th>
-
-                            <th>
-                                Revised Delivery
-                            </th>
-
-                            <th>
-                                Risk
-                            </th>
-
-                            <th class="text-end px-4">
-                                Action
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        {% for alert in delivery_risk_alerts %}
-
-                        <tr>
-
-                            <!-- REQUIREMENT -->
-
-                            <td class="px-4">
-
-                                <div class="fw-semibold">
-                                    {{ alert.cad_model.title }}
-                                </div>
-
-                                <small class="text-muted">
-                                    {{ alert.cad_model.tracking_number }}
-                                </small>
-
-                            </td>
-
-
-                            <!-- VENDOR -->
-
-                            <td>
-
-                                {% if alert.vendor %}
-
-                                    <div class="fw-semibold">
-                                        {{ alert.vendor.company_name|default:alert.vendor.username }}
-                                    </div>
-
-                                    <small class="text-muted">
-                                        {{ alert.vendor.unique_id }}
-                                    </small>
-
-                                {% else %}
-
-                                    <span class="text-muted">
-                                        Vendor unavailable
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <!-- ORIGINAL DATE -->
-
-                            <td>
-
-                                {% if alert.original_delivery_date %}
-
-                                    {{ alert.original_delivery_date|date:"d M Y" }}
-
-                                {% else %}
-
-                                    <span class="text-muted">
-                                        —
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <!-- REVISED DATE -->
-
-                            <td>
-
-                                {% if alert.revised_delivery_date %}
-
-                                    <span class="fw-semibold text-danger">
-                                        {{ alert.revised_delivery_date|date:"d M Y" }}
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="text-muted">
-                                        Not provided
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <!-- RISK -->
-
-                            <td>
-
-                                {% if alert.severity == "CRITICAL" %}
-
-                                    <span class="badge bg-danger">
-                                        CRITICAL
-                                    </span>
-
-                                {% elif alert.severity == "HIGH" %}
-
-                                    <span class="badge bg-danger">
-                                        HIGH
-                                    </span>
-
-                                {% elif alert.severity == "MEDIUM" %}
-
-                                    <span class="badge bg-warning text-dark">
-                                        MEDIUM
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="badge bg-secondary">
-                                        {{ alert.severity|default:"REVIEW" }}
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <!-- ACTION -->
-
-                            <td class="text-end px-4">
-
-                                <a
-                                    href="{% url 'review_delivery_risk' alert.id %}"
-                                    class="btn btn-sm btn-outline-danger"
-                                >
-                                    Review Alert
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
+        <!-- 2. SERVICE & HELP REQUESTS PANE -->
+        <div class="tab-pane fade" id="pane-help" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h3 class="h4 fw-bold mb-1">Incoming Service & Help Requests</h3>
+                    <p class="text-muted small mb-0">Assistance enquiries, vendor/expert booking requests, and end-to-end sourcing help.</p>
+                </div>
             </div>
 
+            {% if service_requests %}
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4">Project Title & Type</th>
+                                    <th>Client / Contact Info</th>
+                                    <th>Task Description / Scope</th>
+                                    <th>Assigned Expert</th>
+                                    <th>Status & Response</th>
+                                    <th class="text-end px-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in service_requests %}
+                                <tr>
+                                    <td class="px-4">
+                                        <div class="fw-bold">{{ req.project_title }}</div>
+                                        <span class="badge bg-light text-dark border">{{ req.get_request_type_display }}</span>
+                                        <div class="small text-muted mt-1">{{ req.created_at|date:"M d, Y H:i" }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ req.contact_name }}</div>
+                                        <div class="small text-muted">{{ req.contact_email }}</div>
+                                        {% if req.contact_phone %}<div class="small text-muted"><i class="bi bi-telephone me-1"></i>{{ req.contact_phone }}</div>{% endif %}
+                                        {% if req.company_name %}<div class="small fw-semibold text-dark">{{ req.company_name }}</div>{% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="small text-secondary text-truncate" style="max-width: 250px;">{{ req.task_description }}</div>
+                                        {% if req.required_processes %}<div class="small text-muted"><strong>Processes:</strong> {{ req.required_processes }}</div>{% endif %}
+                                        {% if req.quantity_or_scope %}<div class="small text-muted"><strong>Scope:</strong> {{ req.quantity_or_scope }}</div>{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.assigned_expert %}
+                                            <span class="badge bg-primary"><i class="bi bi-person-check me-1"></i>{{ req.assigned_expert.user.get_full_name|default:req.assigned_expert.user.username }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.expert_response == 'ACCEPTED' %}
+                                            <span class="badge bg-success">Expert Accepted</span>
+                                        {% elif req.expert_response == 'DECLINED' %}
+                                            <span class="badge bg-danger">Expert Declined</span>
+                                        {% elif req.expert_response == 'UNAVAILABLE' %}
+                                            <span class="badge bg-warning text-dark">Expert Unavailable</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark border">{{ req.get_status_display }}</span>
+                                        {% endif %}
+                                        {% if req.expert_feedback_notes %}
+                                            <div class="small text-muted mt-1 text-truncate" style="max-width: 150px;">{{ req.expert_feedback_notes }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end px-4">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="mailto:{{ req.contact_email }}?subject=RE: {{ req.project_title|urlencode }}" class="btn btn-sm btn-outline-primary" title="Email Client">
+                                                <i class="bi bi-envelope"></i> Email
+                                            </a>
+                                            <a href="{% url 'engineer_bulk_invite_experts' %}" class="btn btn-sm btn-dark" title="Assign Expert">
+                                                Assign Expert
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                <h4 class="fw-bold mb-1">No Help or Service Requests</h4>
+                <p class="text-muted mb-0">Requests submitted via the website contact and service request forms will appear here.</p>
+            </div>
+            {% endif %}
         </div>
 
-    </div>
-
-    {% endif %}
-
-
-    <!-- ===================================================== -->
-    <!-- REQUIREMENTS -->
-    <!-- ===================================================== -->
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-
-        <div>
-
-            <h4 class="fw-bold mb-1">
-                Manufacturing Requirements
-            </h4>
-
-            <p class="text-muted small mb-0">
-                Review OEM requirements and manage the manufacturing workflow.
-            </p>
-
-        </div>
-
-    </div>
-
-
-    {% if jobs %}
-
-    <div class="card border-0 shadow-sm rounded-4">
-
-        <div class="card-body p-0">
-
-            <div class="table-responsive">
-
-                <table class="table align-middle mb-0">
-
-                    <thead class="table-light">
-
-                        <tr>
-
-                            <th class="px-4">
-                                Requirement
-                            </th>
-
-                            <th>
-                                OEM
-                            </th>
-
-                            <th>
-                                Quantity
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
-                            <th class="text-end px-4">
-                                Actions
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        {% for job in jobs %}
-
-                        <tr>
-
-                            <!-- REQUIREMENT -->
-
-                            <td class="px-4">
-
-                                <div class="fw-semibold">
-                                    {{ job.title }}
-                                </div>
-
-                                <small class="text-muted">
-                                    {{ job.tracking_number }}
-                                </small>
-
-                            </td>
-
-
-                            <!-- OEM -->
-
-                            <td>
-
-                                <div class="fw-semibold">
-                                    {{ job.uploaded_by.company_name|default:job.uploaded_by.username }}
-                                </div>
-
-                                <small class="text-muted">
-                                    {{ job.uploaded_by.unique_id }}
-                                </small>
-
-                            </td>
-
-
-                            <!-- QUANTITY -->
-
-                            <td>
-                                {{ job.batch_quantity }}
-                            </td>
-
-
-                            <!-- STATUS -->
-
-                            <td>
-
-                                {% if job.status == "COMPLETED" %}
-
-                                    <span class="badge bg-success">
-                                        {{ job.get_status_display }}
-                                    </span>
-
-                                {% elif job.status == "REJECTED" or job.status == "OEM_REJECTED" %}
-
-                                    <span class="badge bg-danger">
-                                        {{ job.get_status_display }}
-                                    </span>
-
-                                {% elif job.status == "OEM_APPROVAL_PENDING" %}
-
-                                    <span class="badge bg-warning text-dark">
-                                        OEM Approval Pending
-                                    </span>
-
-                                {% elif job.status == "OEM_APPROVED" %}
-
-                                    <span class="badge bg-success">
-                                        OEM Approved
-                                    </span>
-
-                                {% elif job.status == "VENDOR_AWARDED" %}
-
-                                    <span class="badge bg-primary">
-                                        Vendor Awarded
-                                    </span>
-
-                                {% elif job.status == "FINAL_VENDOR_ONBOARDED" %}
-
-                                    <span class="badge bg-primary">
-                                        Vendor Onboarded
-                                    </span>
-
-                                {% elif job.status == "FAI_PENDING" %}
-
-                                    <span class="badge bg-warning text-dark">
-                                        FAI Pending
-                                    </span>
-
-                                {% elif job.status == "FAI_APPROVED" %}
-
-                                    <span class="badge bg-success">
-                                        FAI Approved
-                                    </span>
-
-                                {% elif job.status == "BID_PLACED" %}
-
-                                    <span class="badge bg-warning text-dark">
-                                        {{ job.get_status_display }}
-                                    </span>
-
-                                {% elif job.status == "PUBLISHED" %}
-
-                                    <span class="badge bg-success">
-                                        Published
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="badge bg-secondary">
-                                        {{ job.get_status_display }}
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <!-- ACTIONS -->
-
-                            <td class="text-end px-4">
-
-                                <div class="d-flex justify-content-end gap-2 flex-wrap">
-
-
-                                    <!-- REVIEW -->
-
-                                    <a
-                                        href="{% url 'review_workload' job.id %}"
-                                        class="btn btn-sm btn-outline-dark"
-                                    >
-                                        Review
-                                    </a>
-
-
-                                    <!-- MANAGE BIDS -->
-
-                                    {% if job.status == "BID_PLACED" or job.bids.exists %}
-
-                                    <a
-                                        href="{% url 'primexa_manage_bids' job.id %}"
-                                        class="btn btn-sm btn-dark"
-                                        style="background-color:#0a192f;"
-                                    >
-                                        Manage Bids
-                                    </a>
-                                    <a
-                                        href="{% url 'engineering_process_plan' job.id %}"
-                                        class="btn btn-sm btn-outline-dark"
-                                    >
-                                        Process Plan
-                                    </a>
-
-                                    {% endif %}
-
-
-                                    <!-- OEM APPROVAL -->
-
-                                    {% if job.status == "OEM_APPROVAL_PENDING" %}
-
-                                    <span
-                                        class="btn btn-sm btn-outline-warning disabled"
-                                    >
-                                        Awaiting OEM
-                                    </span>
-
-                                    {% endif %}
-
-
-                                    <!-- FINAL AWARD -->
-
-                                    {% if job.status == "OEM_APPROVED" %}
-
-                                    <a
-                                        href="{% url 'final_vendor_award' job.id %}"
-                                        class="btn btn-sm btn-success"
-                                    >
-                                        Issue Final Award
-                                    </a>
-
-                                    {% endif %}
-
-
-                                    <!-- FAI -->
-
-                                    {% if job.status == "VENDOR_AWARDED" or job.status == "FINAL_VENDOR_ONBOARDED" %}
-
-                                    <a
-                                        href="{% url 'fai_review' job.id %}"
-                                        class="btn btn-sm btn-outline-primary"
-                                    >
-                                        FAI Review
-                                    </a>
-
-                                    {% endif %}
-
-
-                                    {% if job.status == "FAI_PENDING" %}
-
-                                    <a
-                                        href="{% url 'fai_review' job.id %}"
-                                        class="btn btn-sm btn-warning"
-                                    >
-                                        Review FAI
-                                    </a>
-
-                                    {% endif %}
-
-
-                                    {% if job.status == "FAI_APPROVED" %}
-
-                                    <span
-                                        class="btn btn-sm btn-outline-success disabled"
-                                    >
-                                        FAI Approved
-                                    </span>
-
-                                    {% endif %}
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
+        <!-- 3. VENDOR ACCOUNTS PANE -->
+        <div class="tab-pane fade" id="pane-vendors" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h3 class="h4 fw-bold mb-1">Vendor Account Management & Approvals</h3>
+                    <p class="text-muted small mb-0">Approve vendor accounts, suspend or activate access, and manage vendor records.</p>
+                </div>
             </div>
 
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 px-4 pt-4 d-flex justify-content-between align-items-center">
+                    <h4 class="h5 fw-bold mb-0">Vendor Network Accounts ({{ vendors|length }})</h4>
+                </div>
+                <div class="card-body p-0">
+                    {% if vendors %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4">Business Name & Code</th>
+                                    <th>Location</th>
+                                    <th>Approval Status</th>
+                                    <th>Account Status</th>
+                                    <th class="text-end px-4">Actions (Suspend / Delete / Approve)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for v in vendors %}
+                                <tr>
+                                    <td class="px-4">
+                                        <div class="fw-bold">{{ v.user.company_name|default:v.user.username }}</div>
+                                        <small class="text-muted">Code: {{ v.vendor_id_code }} &bull; Username: {{ v.user.username }}</small>
+                                    </td>
+                                    <td><small class="text-muted">{{ v.city|default:"N/A" }}</small></td>
+                                    <td>
+                                        {% if v.is_verified and v.is_public_profile_approved %}
+                                            <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>Verified & Approved</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Pending Approval</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if v.user.is_active %}
+                                            <span class="badge bg-success-subtle text-success border border-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger">Suspended</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end px-4">
+                                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                            <a href="{% url 'public_vendor_profile' slug=v.public_slug|default:v.user.username %}" class="btn btn-sm btn-outline-secondary" target="_blank">View Profile</a>
+                                            
+                                            {% if not v.is_verified or not v.is_public_profile_approved %}
+                                                <a href="{% url 'approve_vendor' company_slug=v.public_slug|default:v.user.username %}" class="btn btn-sm btn-success fw-semibold">Approve</a>
+                                            {% endif %}
+
+                                            <!-- Suspend / Activate Toggle -->
+                                            <a href="{% url 'toggle_user_active_status' user_id=v.user.id %}" class="btn btn-sm {% if v.user.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" onclick="return confirm('Change active status for vendor {{ v.user.company_name|escapejs }}?');">
+                                                {% if v.user.is_active %}Suspend{% else %}Activate{% endif %}
+                                            </a>
+
+                                            <!-- Delete Account -->
+                                            <a href="{% url 'delete_user_account' user_id=v.user.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('PERMANENTLY DELETE vendor account {{ v.user.username|escapejs }}? This cannot be undone.');">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        No vendor accounts found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. OEM ACCOUNTS PANE -->
+        <div class="tab-pane fade" id="pane-oems" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h3 class="h4 fw-bold mb-1">OEM Account Management & Approvals</h3>
+                    <p class="text-muted small mb-0">Approve OEM accounts, suspend or activate access, and manage OEM business profiles.</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 px-4 pt-4 d-flex justify-content-between align-items-center">
+                    <h4 class="h5 fw-bold mb-0">OEM Accounts ({{ oems|length }})</h4>
+                </div>
+                <div class="card-body p-0">
+                    {% if oems %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4">Business Name & Code</th>
+                                    <th>Contact Person</th>
+                                    <th>Approval Status</th>
+                                    <th>Account Status</th>
+                                    <th class="text-end px-4">Actions (Suspend / Delete / Approve)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for o in oems %}
+                                <tr>
+                                    <td class="px-4">
+                                        <div class="fw-bold">{{ o.user.company_name|default:o.user.username }}</div>
+                                        <small class="text-muted">Code: {{ o.oem_id_code }} &bull; Username: {{ o.user.username }}</small>
+                                    </td>
+                                    <td><small class="text-muted">{{ o.contact_person_name|default:"OEM Client" }}</small></td>
+                                    <td>
+                                        {% if o.is_verified and o.is_approved %}
+                                            <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>Verified & Approved</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Pending Approval</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if o.user.is_active %}
+                                            <span class="badge bg-success-subtle text-success border border-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger">Suspended</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end px-4">
+                                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                            <a href="{% url 'public_oem_profile' slug=o.slug %}" class="btn btn-sm btn-outline-secondary" target="_blank">View Profile</a>
+
+                                            {% if not o.is_verified or not o.is_approved %}
+                                                <a href="{% url 'approve_oem' company_slug=o.slug %}" class="btn btn-sm btn-success fw-semibold">Approve</a>
+                                            {% endif %}
+
+                                            <!-- Suspend / Activate Toggle -->
+                                            <a href="{% url 'toggle_user_active_status' user_id=o.user.id %}" class="btn btn-sm {% if o.user.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" onclick="return confirm('Change active status for OEM {{ o.user.company_name|escapejs }}?');">
+                                                {% if o.user.is_active %}Suspend{% else %}Activate{% endif %}
+                                            </a>
+
+                                            <!-- Delete Account -->
+                                            <a href="{% url 'delete_user_account' user_id=o.user.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('PERMANENTLY DELETE OEM account {{ o.user.username|escapejs }}? This cannot be undone.');">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        No OEM accounts found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. EXPERT ACCOUNTS PANE -->
+        <div class="tab-pane fade" id="pane-experts" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h3 class="h4 fw-bold mb-1">Expert Account Management & Approvals</h3>
+                    <p class="text-muted small mb-0">Approve independent manufacturing experts, suspend access, and manage expert credentials.</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 px-4 pt-4 d-flex justify-content-between align-items-center">
+                    <h4 class="h5 fw-bold mb-0">Expert Accounts ({{ experts|length }})</h4>
+                </div>
+                <div class="card-body p-0">
+                    {% if experts %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4">Expert Name</th>
+                                    <th>Headline</th>
+                                    <th>Approval Status</th>
+                                    <th>Account Status</th>
+                                    <th class="text-end px-4">Actions (Suspend / Delete / Approve)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for e in experts %}
+                                <tr>
+                                    <td class="px-4">
+                                        <div class="fw-bold">{{ e.user.get_full_name|default:e.user.username }}</div>
+                                        <small class="text-muted">Code: {{ e.expert_id_code }} &bull; Username: {{ e.user.username }}</small>
+                                    </td>
+                                    <td><small class="text-muted">{{ e.headline|default:"Specialist" }}</small></td>
+                                    <td>
+                                        {% if e.is_verified and e.is_public_profile %}
+                                            <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>Verified & Approved</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Pending Approval</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if e.user.is_active %}
+                                            <span class="badge bg-success-subtle text-success border border-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger">Suspended</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end px-4">
+                                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                            <a href="{% url 'public_expert_profile' slug=e.slug %}" class="btn btn-sm btn-outline-secondary" target="_blank">View Profile</a>
+
+                                            {% if not e.is_verified or not e.is_public_profile %}
+                                                <a href="{% url 'approve_expert' company_slug=e.slug %}" class="btn btn-sm btn-success fw-semibold">Approve</a>
+                                            {% endif %}
+
+                                            <!-- Suspend / Activate Toggle -->
+                                            <a href="{% url 'toggle_user_active_status' user_id=e.user.id %}" class="btn btn-sm {% if e.user.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" onclick="return confirm('Change active status for Expert {{ e.user.username|escapejs }}?');">
+                                                {% if e.user.is_active %}Suspend{% else %}Activate{% endif %}
+                                            </a>
+
+                                            <!-- Delete Account -->
+                                            <a href="{% url 'delete_user_account' user_id=e.user.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('PERMANENTLY DELETE Expert account {{ e.user.username|escapejs }}? This cannot be undone.');">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">
+                        No expert accounts found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. DELIVERY RISKS PANE -->
+        <div class="tab-pane fade" id="pane-risks" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h3 class="h4 fw-bold mb-1">Delivery Risk Center</h3>
+                    <p class="text-muted small mb-0">Active vendor delivery risk alerts requiring engineering review.</p>
+                </div>
+            </div>
+
+            {% if delivery_risk_alerts %}
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4">Requirement</th>
+                                    <th>Vendor</th>
+                                    <th>Original Date</th>
+                                    <th>Revised Date</th>
+                                    <th>Severity</th>
+                                    <th class="text-end px-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alert in delivery_risk_alerts %}
+                                <tr>
+                                    <td class="px-4">
+                                        <div class="fw-semibold">{{ alert.cad_model.title }}</div>
+                                        <small class="text-muted">{{ alert.cad_model.tracking_number }}</small>
+                                    </td>
+                                    <td>
+                                        {% if alert.vendor %}
+                                            <div class="fw-semibold">{{ alert.vendor.company_name|default:alert.vendor.username }}</div>
+                                            <small class="text-muted">{{ alert.vendor.unique_id }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Vendor unavailable</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ alert.original_delivery_date|date:"d M Y"|default:"—" }}</td>
+                                    <td>
+                                        {% if alert.revised_delivery_date %}
+                                            <span class="fw-semibold text-danger">{{ alert.revised_delivery_date|date:"d M Y" }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Not provided</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if alert.severity == "CRITICAL" or alert.severity == "HIGH" %}
+                                            <span class="badge bg-danger">{{ alert.severity }}</span>
+                                        {% elif alert.severity == "MEDIUM" %}
+                                            <span class="badge bg-warning text-dark">MEDIUM</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ alert.severity|default:"REVIEW" }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end px-4">
+                                        <a href="{% url 'review_delivery_risk' alert.id %}" class="btn btn-sm btn-outline-danger">Review Alert</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+                <i class="bi bi-shield-check fs-1 text-success d-block mb-2"></i>
+                <h4 class="fw-bold mb-1">No Active Delivery Risks</h4>
+                <p class="text-muted mb-0">All active manufacturing orders are currently progressing on schedule.</p>
+            </div>
+            {% endif %}
         </div>
 
     </div>
-
-    {% else %}
-
-    <div class="card border-0 shadow-sm rounded-4">
-
-        <div class="card-body text-center py-5">
-
-            <h4 class="fw-bold mb-2">
-                No Requirements Found
-            </h4>
-
-            <p class="text-muted mb-0">
-                New OEM manufacturing requirements will appear here.
-            </p>
-
-        </div>
-
-    </div>
-
-    {% endif %}
 
 </div>
-
 {% endblock %}

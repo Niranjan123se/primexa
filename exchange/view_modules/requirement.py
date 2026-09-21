@@ -34,10 +34,11 @@ def upload_job_view(request):
 
     if (
         request.user.role != "OEM"
+        and request.user.role != "ENGINEER"
         and not request.user.is_superuser
     ):
         return HttpResponseForbidden(
-            "Only OEM users can upload requirements."
+            "Security Block: Access restricted to OEMs and Primexa staff engineers."
         )
 
     if request.method == "POST":
@@ -45,6 +46,7 @@ def upload_job_view(request):
         form = CADUploadForm(
             request.POST,
             request.FILES,
+            user=request.user,
         )
 
         if form.is_valid():
@@ -56,34 +58,30 @@ def upload_job_view(request):
             job.uploaded_by = request.user
 
             # --------------------------------------------------
-            # New OEM requirement enters engineering review
+            # Sourcing Flow Handling
             # --------------------------------------------------
+            if job.sourcing_flow == "DIRECT_RFQ":
+                job.status = "PUBLISHED"
+                job.save()
+                form.save_m2m()
+                if job.targeted_vendors.exists():
+                    for v in job.targeted_vendors.all():
+                        notify_requirement_published(job, recipient=v)
+                else:
+                    notify_requirement_published(job)
+            else:
+                job.status = "PENDING"
+                if hasattr(job, "process_plan_status"):
+                    job.process_plan_status = "DRAFT"
+                job.save()
+                form.save_m2m()
+                notify_requirement_submitted(job)
 
-            job.status = "PENDING"
-
-            # --------------------------------------------------
-            # New engineering process plan
-            # --------------------------------------------------
-
-            if hasattr(
-                job,
-                "process_plan_status",
-            ):
-                job.process_plan_status = "DRAFT"
-
-            job.save()
-
-            notify_requirement_submitted(
-                job
-            )
-
-            return redirect(
-                "oem_dashboard"
-            )
+            return redirect("oem_dashboard")
 
     else:
 
-        form = CADUploadForm()
+        form = CADUploadForm(user=request.user)
 
     return render(
         request,
@@ -579,3 +577,121 @@ def _process_form(
             "is_outsourcable": True,
         }
     )
+
+
+# ==============================================================
+# DIRECT RFQ & TARGETED SOURCING VIEWS
+# ==============================================================
+
+from datetime import timedelta
+from django.contrib import messages
+from users.models import User
+
+@login_required
+def oem_direct_rfq_bids(request, file_id):
+    """OEM dashboard page to view vendor bids on Direct RFQ and directly award order."""
+    job = get_object_or_404(CADModel, id=file_id)
+
+    is_owner = request.user == job.uploaded_by
+    is_staff = request.user.is_superuser or request.user.role == "ENGINEER"
+
+    if not (is_owner or is_staff):
+        return HttpResponseForbidden("Security Block: Access restricted to requirement owner.")
+
+    bids = job.bids.select_related("vendor", "vendor__vendor_profile").order_by("offered_price")
+
+    return render(
+        request,
+        "exchange/oem_direct_rfq_bids.html",
+        {
+            "job": job,
+            "bids": bids,
+        },
+    )
+
+
+@login_required
+def oem_award_direct_vendor(request, file_id, bid_id):
+    """Direct award action triggered by OEM for a specific vendor bid on Direct RFQ."""
+    from ..models import Bid
+    from ..services.notifications import notify_vendor_final_award
+
+    job = get_object_or_404(CADModel, id=file_id)
+    bid = get_object_or_404(Bid, id=bid_id, cad_model=job)
+
+    is_owner = request.user == job.uploaded_by
+    is_staff = request.user.is_superuser or request.user.role == "ENGINEER"
+
+    if not (is_owner or is_staff):
+        return HttpResponseForbidden("Security Block: Access restricted to requirement owner.")
+
+    if request.method == "POST":
+        job.selected_vendor = bid.vendor
+        job.accepted_bid = bid
+        job.accepted_vendor_cost = bid.offered_price
+        job.final_primexa_quote = bid.offered_price
+        job.status = "ASSIGNED_TO_VENDOR"
+        job.vendor_committed_delivery_date = timezone.now().date() + timedelta(days=bid.delivery_days)
+        job.vendor_awarded_at = timezone.now()
+        job.save()
+
+        notify_vendor_final_award(job)
+
+        company_name = bid.vendor.company_name or bid.vendor.username
+        messages.success(request, f"Order successfully awarded directly to vendor '{company_name}'!")
+        return redirect("oem_dashboard")
+
+    return redirect("oem_direct_rfq_bids", file_id=job.id)
+
+
+@login_required
+def engineer_bulk_invite_vendors(request, file_id):
+    """Primexa Engineer action to bulk invite all or selected vendors to an RFQ."""
+    if not (request.user.is_superuser or request.user.role == "ENGINEER"):
+        return HttpResponseForbidden("Security Block: Primexa staff engineer access required.")
+
+    job = get_object_or_404(CADModel, id=file_id)
+
+    if request.method == "POST":
+        invite_all = request.POST.get("invite_all") == "1"
+        vendor_ids = request.POST.getlist("vendor_ids")
+
+        verified_vendors = User.objects.filter(role="VENDOR", vendor_profile__is_verified=True)
+
+        if invite_all:
+            job.targeted_vendors.set(verified_vendors)
+            count = verified_vendors.count()
+            messages.success(request, f"Sent RFQ invitations to ALL {count} verified vendors in the network.")
+        elif vendor_ids:
+            selected_vendors = verified_vendors.filter(id__in=vendor_ids)
+            job.targeted_vendors.add(*selected_vendors)
+            count = selected_vendors.count()
+            messages.success(request, f"Sent RFQ invitations to {count} selected vendors.")
+        else:
+            messages.warning(request, "No vendors were selected for invitation.")
+            return redirect("review_workload", file_id=job.id)
+
+        if job.status == "PENDING":
+            job.status = "PUBLISHED"
+            job.save(update_fields=["status"])
+
+        for v in job.targeted_vendors.all():
+            notify_requirement_published(job, recipient=v)
+
+        return redirect("review_workload", file_id=job.id)
+
+    return redirect("review_workload", file_id=job.id)
+
+
+@login_required
+def resend_bidding_notification(request, file_id):
+    """Staff Engineers can resend RFQ / bidding notification emails for a requirement."""
+    if not (request.user.is_superuser or request.user.role == "ENGINEER"):
+        return HttpResponseForbidden("Security Block: Primexa staff engineer access required.")
+
+    job = get_object_or_404(CADModel, id=file_id)
+    notifications = notify_requirement_published(job)
+    sent_count = len([n for n in notifications if n and n.status == "SENT"]) if notifications else 0
+
+    messages.success(request, f"Bidding notification emails dispatched to network vendors (Sent: {sent_count}).")
+    return redirect("engineer_dashboard")

@@ -5,11 +5,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from exchange.seo_views import robots_txt
-from exchange.sitemaps import PublicVendorProfileSitemap
+from exchange.sitemaps import (
+    StaticViewSitemap,
+    PublicVendorProfileSitemap,
+    PublicExpertProfileSitemap,
+    PublicOEMProfileSitemap,
+)
 
 
 sitemaps = {
+    "static": StaticViewSitemap,
     "vendors": PublicVendorProfileSitemap,
+    "experts": PublicExpertProfileSitemap,
+    "oems": PublicOEMProfileSitemap,
 }
 
 

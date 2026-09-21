@@ -33,7 +33,12 @@ from .view_modules.notifications import (
 from .view_modules.requirement import (
 upload_job_view,
 review_workload,
+oem_direct_rfq_bids,
+oem_award_direct_vendor,
+engineer_bulk_invite_vendors,
+resend_bidding_notification,
 )
+from .view_modules.review import submit_review
 
 # ==========================================================
 
@@ -82,4 +87,10 @@ fai_review,
 from .view_modules.delivery_risk import (
     report_delivery_risk,
     review_delivery_risk,
+)
+from .view_modules.approval import (
+    approve_vendor,
+    approve_oem,
+    approve_expert,
+    public_oem_profile,
 )

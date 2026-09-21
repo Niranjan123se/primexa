@@ -501,7 +501,7 @@
 
     {% if jobs %}
 
-    <div class="row g-4">
+    <div class="row g-4 mb-5">
 
         {% for job in jobs %}
 
@@ -527,9 +527,27 @@
 
                             </div>
 
-                            <span class="badge bg-success">
-                                Open
-                            </span>
+                            <div class="d-flex gap-1 align-items-center">
+
+                                {% if job.sourcing_flow == "DIRECT_RFQ" %}
+
+                                    <span class="badge bg-info text-dark" title="Direct Network RFQ">
+                                        ⚡ Direct RFQ
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-primary" title="Primexa Managed Sourcing">
+                                        🛡️ Managed
+                                    </span>
+
+                                {% endif %}
+
+                                <span class="badge bg-success">
+                                    Open
+                                </span>
+
+                            </div>
 
                         </div>
 
@@ -616,7 +634,7 @@
 
     {% else %}
 
-    <div class="card border-0 shadow-sm rounded-4">
+    <div class="card border-0 shadow-sm rounded-4 mb-5">
 
         <div class="card-body text-center py-5">
 

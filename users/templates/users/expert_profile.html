@@ -1,6 +1,151 @@
 {% extends "users/base.html" %}
-{% block title %}Expert profile | Primexa{% endblock %}
+{% block title %}Expert Profile & Portfolio | Primexa{% endblock %}
+
 {% block content %}
-<div class="card shadow-sm border-0"><div class="card-body p-4"><h1 class="h2">Expert profile</h1><form method="post">{% csrf_token %}
-<div class="row g-3 mt-1">{% for field in user_form %}<div class="col-md-6"><label class="form-label">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}{% for field in profile_form %}<div class="col-md-6{% if field.field.widget.input_type == 'textarea' %} col-12{% endif %}"><label class="form-label">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div><button class="btn btn-dark mt-4">Save profile</button></form></div></div>
+<div class="container py-4">
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <h1 class="h2 fw-bold mb-4"><i class="bi bi-person-badge me-2 text-primary"></i>Expert Profile Details</h1>
+            <form method="post">
+                {% csrf_token %}
+                <h2 class="h5 fw-bold text-muted mb-3 border-bottom pb-2">Account & Contact Info</h2>
+                <div class="row g-3 mb-4">
+                    {% for field in user_form %}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <h2 class="h5 fw-bold text-muted mb-3 border-bottom pb-2">Expertise & Background</h2>
+                <div class="row g-3 mb-4">
+                    {% for field in profile_form %}
+                    <div class="col-md-6{% if field.name in 'expertise,industries,projects,certifications,about' %} col-12{% endif %}">
+                        <label class="form-label fw-semibold small">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn btn-primary fw-semibold px-4">Save Profile Details</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Portfolio Photos Management -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 fw-bold mb-0"><i class="bi bi-images me-2 text-primary"></i>Work Portfolio Photos</h2>
+            </div>
+
+            <!-- Upload Photo Form -->
+            <form method="post" action="{% url 'add_expert_photo' %}" enctype="multipart/form-data" class="p-3 bg-light rounded-3 border mb-4">
+                {% csrf_token %}
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold small">Upload Work/Project Image</label>
+                        <input type="file" name="image" class="form-control form-control-sm" accept="image/*" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold small">Caption / Description</label>
+                        <input type="text" name="caption" class="form-control form-control-sm" placeholder="e.g. 5-Axis CNC Milling fixture design">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-sm btn-primary w-100 fw-semibold">Upload Photo</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Existing Photos Grid -->
+            {% if profile_object.photos.all %}
+            <div class="row g-3">
+                {% for photo in profile_object.photos.all %}
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                        <img src="{{ photo.image.url }}" class="card-img-top" alt="{{ photo.caption|default:'Work photo' }}" style="height: 160px; object-fit: cover;">
+                        <div class="card-body p-2 d-flex justify-content-between align-items-center bg-light">
+                            <span class="small text-muted text-truncate me-2">{{ photo.caption|default:"Portfolio image" }}</span>
+                            <a href="{% url 'delete_expert_photo' photo_id=photo.id %}" class="btn btn-sm btn-outline-danger p-1 lh-1" onclick="return confirm('Delete this portfolio photo?');">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No portfolio photos uploaded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Official Certificates Management -->
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4 p-lg-5">
+            <h2 class="h4 fw-bold mb-4"><i class="bi bi-patch-check me-2 text-success"></i>Verifiable Certificates & Qualifications</h2>
+
+            <!-- Upload Certificate Form -->
+            <form method="post" action="{% url 'add_expert_certificate' %}" enctype="multipart/form-data" class="p-3 bg-light rounded-3 border mb-4">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">Certificate Title *</label>
+                        <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g. Certified AS9100 Lead Auditor" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold small">Issuing Organization</label>
+                        <input type="text" name="issuing_organization" class="form-control form-control-sm" placeholder="e.g. TUV NORD / ASQ">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold small">Issue Date</label>
+                        <input type="date" name="issue_date" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold small">Document (PDF/Image)</label>
+                        <input type="file" name="certificate_file" class="form-control form-control-sm">
+                    </div>
+                </div>
+                <div class="mt-3 text-end">
+                    <button type="submit" class="btn btn-sm btn-success fw-semibold px-3">Add Certificate</button>
+                </div>
+            </form>
+
+            <!-- Existing Certificates List -->
+            {% if profile_object.certificates.all %}
+            <div class="row g-3">
+                {% for cert in profile_object.certificates.all %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-bold">{{ cert.title }}</div>
+                            <div class="small text-muted">{{ cert.issuing_organization }} {% if cert.issue_date %}&bull; {{ cert.issue_date|date:"M Y" }}{% endif %}</div>
+                            {% if cert.certificate_file %}
+                            <div class="mt-2">
+                                <a href="{{ cert.certificate_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>View File
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'delete_expert_certificate' cert_id=cert.id %}" class="btn btn-sm btn-outline-danger p-1 lh-1 ms-2" onclick="return confirm('Delete this certificate?');">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No certificates added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -7,11 +7,17 @@ def robots_txt(request):
     content = "\n".join(
         [
             "User-agent: *",
+            "Allow: /",
             "Allow: /vendors/",
+            "Allow: /experts/",
+            "Allow: /oems/",
+            "Allow: /find-vendors/",
+            "Allow: /find-experts/",
             "Allow: /robots.txt",
             "Allow: /sitemap.xml",
             "Disallow: /admin/",
-            "Disallow: /exchange/",
+            "Disallow: /exchange/review/",
+            "Disallow: /exchange/bids/",
             "Disallow: /profile/",
             "Disallow: /login/",
             "Disallow: /logout/",

@@ -35,13 +35,17 @@
                     <p class="lead mb-0">{{ profile.public_description|default:"Manufacturing vendor in the Primexa network."|linebreaksbr }}</p>
                 </div>
                 <div class="col-lg-4">
-                    {% if profile.public_enquiry_email or profile.public_enquiry_phone %}
                     <div class="border rounded-3 p-3 bg-light">
-                        <h2 class="h6 fw-bold">Business enquiry</h2>
-                        {% if profile.public_enquiry_email %}<div><a href="mailto:{{ profile.public_enquiry_email }}">{{ profile.public_enquiry_email }}</a></div>{% endif %}
-                        {% if profile.public_enquiry_phone %}<div>{{ profile.public_enquiry_phone }}</div>{% endif %}
+                        <h2 class="h6 fw-bold">Business enquiry & Contact</h2>
+                        {% if user.is_authenticated %}
+                            {% if profile.public_enquiry_email %}<div><strong>Email:</strong> <a href="mailto:{{ profile.public_enquiry_email }}">{{ profile.public_enquiry_email }}</a></div>{% endif %}
+                            {% if profile.public_enquiry_phone %}<div><strong>Phone:</strong> {{ profile.public_enquiry_phone }}</div>{% endif %}
+                            {% if profile.user.email and not profile.public_enquiry_email %}<div><strong>Account Email:</strong> {{ profile.user.email }}</div>{% endif %}
+                        {% else %}
+                            <div class="text-muted small mb-2"><i class="bi bi-lock-fill me-1"></i> Contact details are hidden for public visitors.</div>
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-sm btn-dark w-100 fw-semibold">Log In to View Contact Info</a>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -110,4 +114,103 @@
     </section>
     {% endif %}
 </div>
+
+<!-- Ratings & Customer Reviews Section -->
+<section class="mt-5">
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex_wrap align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                <div>
+                    <h2 class="h3 fw-bold mb-1"><i class="bi bi-star-fill text-warning me-2"></i>Ratings & Reviews</h2>
+                    <p class="text-muted mb-0">Feedback from clients and partner network</p>
+                </div>
+                {% if avg_rating %}
+                <div class="text-end">
+                    <span class="fs-2 fw-bold text-dark">{{ avg_rating }}</span><span class="fs-5 text-muted"> / 5.0</span>
+                    <div class="text-muted small">({{ review_count }} review{{ review_count|pluralize }})</div>
+                </div>
+                {% else %}
+                <span class="badge bg-light text-dark fs-6">No reviews yet</span>
+                {% endif %}
+            </div>
+
+            <div class="row g-4">
+                <!-- Review List -->
+                <div class="col-lg-7">
+                    {% if reviews %}
+                        <div class="d-flex flex-column gap-3">
+                        {% for r in reviews %}
+                            <div class="p-3 border rounded-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div class="fw-bold">{{ r.title }}</div>
+                                    <div class="text-warning small">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= r.rating %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-star text-muted"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if r.comment %}
+                                <p class="mb-2 text-secondary small">{{ r.comment|linebreaksbr }}</p>
+                                {% endif %}
+                                <div class="small text-muted">
+                                    By <strong>{{ r.reviewer.get_full_name|default:r.reviewer.username }}</strong> &bull; {{ r.created_at|date:"M d, Y" }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted italic">Be the first to review {{ profile.user.company_name }}!</p>
+                    {% endif %}
+                </div>
+
+                <!-- Submit Review Form -->
+                <div class="col-lg-5">
+                    {% if user.is_authenticated %}
+                        {% if user != profile.user %}
+                        <div class="card border-0 bg-white shadow-sm p-3 rounded-3">
+                            <h3 class="h6 fw-bold mb-3">Write a Review</h3>
+                            <form method="post" action="{% url 'submit_review' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="vendor_slug" value="{{ profile.public_slug }}">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Rating</label>
+                                    <select name="rating" class="form-select form-select-sm" required>
+                                        <option value="5">★★★★★ (5 Stars - Excellent)</option>
+                                        <option value="4">★★★★☆ (4 Stars - Very Good)</option>
+                                        <option value="3">★★★☆☆ (3 Stars - Average)</option>
+                                        <option value="2">★★☆☆☆ (2 Stars - Poor)</option>
+                                        <option value="1">★☆☆☆☆ (1 Star - Terrible)</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Review Title</label>
+                                    <input type="text" name="title" class="form-control form-control-sm" placeholder="Summary of your experience" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Detailed Comments</label>
+                                    <textarea name="comment" class="form-control form-control-sm" rows="3" placeholder="Quality, lead times, communication..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-sm btn-primary w-100 fw-semibold">Submit Review</button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="p-3 bg-light rounded-3 text-center border">
+                            <p class="small text-muted mb-2">Want to write a review?</p>
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-sm btn-outline-dark fw-semibold">Log In to Submit Review</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

@@ -1,7 +1,94 @@
 {% extends "users/base.html" %}
-{% block title %}Expert dashboard | Primexa{% endblock %}
+{% block title %}Expert Dashboard | Primexa{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h2 mb-1">Expert dashboard</h1><p class="text-muted mb-0">{{ profile.headline|default:"Complete your professional profile" }}</p></div><a href="{% url 'profile' %}" class="btn btn-dark">Edit profile</a></div>
-<div class="alert alert-light border d-flex justify-content-between align-items-center"><span><strong>Your public profile URL:</strong> {{ request.scheme }}://{{ request.get_host }}{{ public_profile_url }}{% if not profile.is_public_profile %} <span class="text-muted">(enable publication through Primexa approval)</span>{% endif %}</span><a class="btn btn-sm btn-outline-dark" href="{{ public_profile_url }}">View profile</a></div>
-<div class="card shadow-sm border-0"><div class="card-body"><h2 class="h5">My service requests</h2><ul class="list-group list-group-flush">{% for service_request in service_requests %}<li class="list-group-item d-flex justify-content-between"><span>{{ service_request.project_title }}</span><span class="badge text-bg-secondary">{{ service_request.get_status_display }}</span></li>{% empty %}<li class="list-group-item text-muted">No service requests submitted.</li>{% endfor %}</ul></div></div>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold mb-1">Expert Dashboard</h1>
+            <p class="text-muted mb-0">{{ profile.headline|default:"Independent Manufacturing Expert" }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'profile' %}" class="btn btn-outline-dark fw-semibold">Edit Profile & Portfolio</a>
+        </div>
+    </div>
+
+    {% if public_profile_url %}
+    <div class="alert alert-light border d-flex justify-content-between align-items-center rounded-3 shadow-sm mb-4">
+        <span>
+            <i class="bi bi-globe me-2 text-primary"></i><strong>Your Public Expert Profile URL:</strong> 
+            <a href="{{ public_profile_url }}" class="text-decoration-none fw-semibold ms-1">{{ public_profile_url }}</a>
+            {% if not profile.is_public_profile %}
+                <span class="badge bg-warning text-dark ms-2">Pending Staff Approval</span>
+            {% endif %}
+        </span>
+        <a class="btn btn-sm btn-dark fw-semibold" href="{{ public_profile_url }}" target="_blank">View Public Profile</a>
+    </div>
+    {% endif %}
+
+    <!-- Assigned Job Requests Section -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white p-4 border-bottom">
+            <h2 class="h5 fw-bold mb-0"><i class="bi bi-journal-check me-2 text-primary"></i>Assigned Service & Job Requests</h2>
+        </div>
+        <div class="card-body p-0">
+            {% if service_requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Project / Job Title</th>
+                                <th>Client / Source</th>
+                                <th>Status</th>
+                                <th>My Availability Response</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in service_requests %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ req.project_title }}</div>
+                                    <small class="text-muted">Submitted {{ req.created_at|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    <div>{{ req.company_name|default:req.contact_name }}</div>
+                                    <small class="text-muted">{{ req.contact_email }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ req.get_status_display }}</span>
+                                </td>
+                                <td>
+                                    {% if req.expert_response == 'ACCEPTED' %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Accepted</span>
+                                    {% elif req.expert_response == 'DECLINED' %}
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Declined</span>
+                                    {% elif req.expert_response == 'UNAVAILABLE' %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Unavailable</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark border">Pending Feedback</span>
+                                    {% endif %}
+                                    {% if req.expert_feedback_notes %}
+                                        <div class="small text-muted text-truncate" style="max-width: 200px;">{{ req.expert_feedback_notes }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{% url 'expert_respond_service_request' request_id=req.id %}" class="btn btn-sm btn-primary fw-semibold">
+                                        Review & Respond
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                    No assigned job or service requests yet. When Primexa Engineers or clients assign requests to you, they will appear here.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

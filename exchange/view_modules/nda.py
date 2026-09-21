@@ -29,6 +29,13 @@ def sign_nda(request, file_id):
             "Only vendors can sign the NDA."
         )
 
+    if cad_file.targeted_vendors.exists() and not (
+        request.user.is_superuser
+        or request.user.role == "ENGINEER"
+        or cad_file.targeted_vendors.filter(id=request.user.id).exists()
+    ):
+        return HttpResponseForbidden("Security Block: You are not authorized to sign NDA for this targeted RFQ.")
+
     transfer, created = (
         WorkloadTransfer.objects.get_or_create(
             cad_model=cad_file,

@@ -177,6 +177,36 @@ class CADModel(models.Model):
     )
 
     # ======================================================
+    # ======================================================
+    # SOURCING WORKFLOW
+    # ======================================================
+
+    SOURCING_FLOW_CHOICES = [
+        (
+            "PRIMEXA_MANAGED",
+            "Primexa Managed Sourcing (Full Quality & Supplier Management)",
+        ),
+        (
+            "DIRECT_RFQ",
+            "Direct Network RFQ (Direct Bids & Quotations from Vendor Network)",
+        ),
+    ]
+
+    sourcing_flow = models.CharField(
+        max_length=30,
+        choices=SOURCING_FLOW_CHOICES,
+        default="PRIMEXA_MANAGED",
+        help_text="Choose whether Primexa manages quality & sourcing or if vendors submit direct quotations.",
+    )
+
+    targeted_vendors = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name="targeted_cad_models",
+        help_text="Targeted vendors for Direct RFQ (OEM: 1 to 5, Engineer: all or selected).",
+    )
+
+    # ======================================================
     # REQUIREMENT CLASSIFICATION
     # ======================================================
 
@@ -232,8 +262,52 @@ class CADModel(models.Model):
     )
 
     # ======================================================
-    # ENGINEERING / FAI
+    # ENGINEERING / FAI / PROCESS PLAN
     # ======================================================
+
+    PROCESS_PLAN_STATUS_CHOICES = [
+        ("DRAFT", "Draft"),
+        ("SUBMITTED", "Submitted for Review"),
+        ("APPROVED", "Approved"),
+        ("REJECTED", "Rejected"),
+    ]
+
+    process_plan_status = models.CharField(
+        max_length=20,
+        choices=PROCESS_PLAN_STATUS_CHOICES,
+        default="DRAFT",
+    )
+
+    process_plan_created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_process_plans",
+    )
+
+    process_plan_submitted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    process_plan_approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_process_plans",
+    )
+
+    process_plan_approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    process_plan_remarks = models.TextField(
+        blank=True,
+        null=True,
+    )
 
     fai_remarks = models.TextField(
         blank=True,

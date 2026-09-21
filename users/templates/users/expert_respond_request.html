@@ -1,0 +1,45 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Respond to Job Request - {{ service_req.project_title }} | Primexa{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:700px;">
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-0 px-4 pt-4">
+            <h1 class="h3 fw-bold mb-1">Respond to Consulting Request</h1>
+            <p class="text-muted mb-0">Provide feedback on your availability for this manufacturing project.</p>
+        </div>
+        <div class="card-body p-4">
+            <div class="bg-light rounded-3 p-3 mb-4">
+                <h2 class="h5 fw-bold mb-2">{{ service_req.project_title }}</h2>
+                <p class="mb-2"><strong>Requester:</strong> {{ service_req.contact_name }} ({% if service_req.company_name %}{{ service_req.company_name }}{% else %}Client{% endif %})</p>
+                <p class="mb-2"><strong>Scope / Quantity:</strong> {{ service_req.quantity_or_scope|default:"N/A" }}</p>
+                <p class="mb-0"><strong>Task Description:</strong><br>{{ service_req.task_description|linebreaksbr }}</p>
+            </div>
+
+            <form method="post" action="{% url 'expert_respond_service_request' request_id=service_req.id %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="id_expert_response">Your Availability Status</label>
+                    <select name="expert_response" id="id_expert_response" class="form-select bg-light border-0 shadow-sm">
+                        <option value="ACCEPTED" {% if service_req.expert_response == 'ACCEPTED' %}selected{% endif %}>✅ Accepted — Available to start</option>
+                        <option value="DECLINED" {% if service_req.expert_response == 'DECLINED' %}selected{% endif %}>❌ Declined — Outside domain expertise</option>
+                        <option value="UNAVAILABLE" {% if service_req.expert_response == 'UNAVAILABLE' %}selected{% endif %}>⏳ Currently Unavailable / Busy</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold" for="id_expert_feedback_notes">Feedback / Consultation Notes for Client</label>
+                    <textarea name="expert_feedback_notes" id="id_expert_feedback_notes" class="form-control bg-light border-0 shadow-sm" rows="4" placeholder="Mention your proposed timeline, hourly/consulting rate estimate, or reasons if unavailable...">{{ service_req.expert_feedback_notes }}</textarea>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-dark px-4" style="background-color:#0a192f;">Submit Response</button>
+                    <a href="{% url 'expert_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

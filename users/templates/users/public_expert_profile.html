@@ -1,13 +1,231 @@
 {% extends "users/base.html" %}
-{% block title %}{{ profile.headline|default:profile.user.username }} | Primexa{% endblock %}
+{% block title %}{{ profile.headline|default:profile.user.username }} | Primexa Expert{% endblock %}
+
 {% block content %}
-<article class="card border-0 shadow-sm"><div class="card-body p-4 p-lg-5">
-<div class="d-flex justify-content-between gap-3 mb-3"><div><h1 class="h2 fw-bold">{{ profile.user.get_full_name|default:profile.user.company_name|default:profile.user.username }}</h1><p class="lead mb-1">{{ profile.headline }}</p><p class="text-muted">{{ profile.city }} · {{ profile.years_of_experience }} years experience</p></div>{% if profile.is_available %}<span class="badge text-bg-success align-self-start">Available now</span>{% endif %}</div>
-<section class="mb-4"><h2 class="h5">Skills and expertise</h2><p>{{ profile.expertise|linebreaksbr }}</p></section>
-{% if profile.industries %}<section class="mb-4"><h2 class="h5">Industries</h2><p>{{ profile.industries|linebreaksbr }}</p></section>{% endif %}
-{% if profile.projects %}<section class="mb-4"><h2 class="h5">Selected projects</h2><p>{{ profile.projects|linebreaksbr }}</p></section>{% endif %}
-{% if profile.certifications %}<section class="mb-4"><h2 class="h5">Certifications and qualifications</h2><p>{{ profile.certifications|linebreaksbr }}</p></section>{% endif %}
-{% if profile.about %}<section class="mb-4"><h2 class="h5">Professional background</h2><p>{{ profile.about|linebreaksbr }}</p></section>{% endif %}
-{% if user.is_authenticated %}<section class="border-top pt-4"><h2 class="h5">Contact and booking</h2>{% if profile.availability_note %}<p class="text-success">{{ profile.availability_note }}</p>{% endif %}<p class="mb-1"><a href="mailto:{{ profile.user.email }}">{{ profile.user.email }}</a></p>{% if profile.user.phone_number %}<p>{{ profile.user.phone_number }}</p>{% endif %}<a class="btn btn-dark" href="{% url 'request_service' %}?expert={{ profile.user.get_full_name|default:profile.user.username|urlencode }}">Request this expert</a></section>{% else %}<section class="border-top pt-4"><h2 class="h5">Contact and booking</h2><p class="text-muted">Log in or register to view contact details and request this expert.</p><a class="btn btn-dark" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in to contact</a></section>{% endif %}
-</div></article>
+<div class="container py-4">
+    <article class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                <div>
+                    <h1 class="h2 fw-bold mb-1">{{ profile.user.get_full_name|default:profile.user.company_name|default:profile.user.username }}</h1>
+                    <p class="lead text-primary fw-semibold mb-2">{{ profile.headline }}</p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-geo-alt me-1"></i>{{ profile.city|default:"Location upon request" }} &bull; 
+                        <i class="bi bi-briefcase me-1"></i>{{ profile.years_of_experience }} years experience
+                    </p>
+                </div>
+                <div class="text-end">
+                    {% if profile.is_available %}
+                        <span class="badge bg-success fs-6 mb-2">Available for projects</span>
+                    {% else %}
+                        <span class="badge bg-secondary fs-6 mb-2">Currently unavailable</span>
+                    {% endif %}
+                    {% if avg_rating %}
+                        <div class="small fw-bold text-dark mt-1"><i class="bi bi-star-fill text-warning me-1"></i>{{ avg_rating }} / 5.0 ({{ review_count }} review{{ review_count|pluralize }})</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <h2 class="h5 fw-bold mb-2">Skills and Expertise</h2>
+                    <p class="text-secondary">{{ profile.expertise|linebreaksbr }}</p>
+                </div>
+                {% if profile.industries %}
+                <div class="col-md-6">
+                    <h2 class="h5 fw-bold mb-2">Industries Served</h2>
+                    <p class="text-secondary">{{ profile.industries|linebreaksbr }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if profile.projects %}
+            <div class="mb-4">
+                <h2 class="h5 fw-bold mb-2">Selected Key Projects</h2>
+                <p class="text-secondary">{{ profile.projects|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+
+            {% if profile.about %}
+            <div class="mb-4">
+                <h2 class="h5 fw-bold mb-2">Professional Background</h2>
+                <p class="text-secondary">{{ profile.about|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Contact & Booking Card -->
+            {% if user.is_authenticated %}
+                <section class="p-4 bg-light rounded-3 border mt-4">
+                    <h2 class="h5 fw-bold mb-2">Contact & Booking</h2>
+                    {% if profile.availability_note %}
+                        <p class="text-success small mb-2"><i class="bi bi-info-circle me-1"></i>{{ profile.availability_note }}</p>
+                    {% endif %}
+                    <div class="d-flex flex-wrap gap-4 align-items-center mb-3">
+                        <div><strong>Email:</strong> <a href="mailto:{{ profile.user.email }}">{{ profile.user.email }}</a></div>
+                        {% if profile.user.phone_number %}<div><strong>Phone:</strong> {{ profile.user.phone_number }}</div>{% endif %}
+                    </div>
+                    <a class="btn btn-primary fw-semibold" href="{% url 'request_service' %}?expert={{ profile.user.get_full_name|default:profile.user.username|urlencode }}">Request & Book Expert</a>
+                </section>
+            {% else %}
+                <section class="p-4 bg-light rounded-3 border text-center mt-4">
+                    <h2 class="h5 fw-bold mb-2">Contact & Booking</h2>
+                    <p class="text-muted small mb-3">Contact details and direct booking request forms are visible to registered Primexa members.</p>
+                    <a class="btn btn-dark fw-semibold" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in to Contact & Book</a>
+                </section>
+            {% endif %}
+        </div>
+    </article>
+
+    <!-- Portfolio Photos Gallery Section -->
+    {% if photos %}
+    <section class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <h2 class="h4 fw-bold mb-3"><i class="bi bi-images me-2 text-primary"></i>Work Portfolio Gallery</h2>
+            <div class="row g-3">
+                {% for photo in photos %}
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                        <img src="{{ photo.image.url }}" class="card-img-top" alt="{{ photo.caption|default:'Expert portfolio work' }}" style="height: 180px; object-fit: cover;">
+                        {% if photo.caption %}
+                        <div class="card-body p-2 small text-muted bg-light">{{ photo.caption }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Verified Credentials & Certificates Section -->
+    {% if certificates %}
+    <section class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            <h2 class="h4 fw-bold mb-3"><i class="bi bi-patch-check-fill me-2 text-success"></i>Verified Credentials & Certifications</h2>
+            <div class="row g-3">
+                {% for cert in certificates %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="fw-bold text-dark d-flex align-items-center justify-content-between">
+                                {{ cert.title }}
+                                {% if cert.is_verified %}<span class="badge bg-success-subtle text-success border border-success">Verified</span>{% endif %}
+                            </div>
+                            <div class="small text-muted mb-2">Issued by: {{ cert.issuing_organization|default:"Authorized Institution" }}</div>
+                            {% if cert.issue_date %}
+                            <div class="small text-muted mb-2">Date: {{ cert.issue_date|date:"M Y" }}</div>
+                            {% endif %}
+                        </div>
+                        {% if cert.certificate_file %}
+                        <div class="mt-2 pt-2 border-top">
+                            <a href="{{ cert.certificate_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-file-earmark-pdf me-1"></i>View Document
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Ratings & Customer Reviews Section -->
+    <section class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                <div>
+                    <h2 class="h3 fw-bold mb-1"><i class="bi bi-star-fill text-warning me-2"></i>Ratings & Reviews</h2>
+                    <p class="text-muted mb-0">Client feedback for {{ profile.user.get_full_name|default:profile.user.username }}</p>
+                </div>
+                {% if avg_rating %}
+                <div class="text-end">
+                    <span class="fs-2 fw-bold text-dark">{{ avg_rating }}</span><span class="fs-5 text-muted"> / 5.0</span>
+                    <div class="text-muted small">({{ review_count }} review{{ review_count|pluralize }})</div>
+                </div>
+                {% else %}
+                <span class="badge bg-light text-dark fs-6">No reviews yet</span>
+                {% endif %}
+            </div>
+
+            <div class="row g-4">
+                <!-- Review List -->
+                <div class="col-lg-7">
+                    {% if reviews %}
+                        <div class="d-flex flex-column gap-3">
+                        {% for r in reviews %}
+                            <div class="p-3 border rounded-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div class="fw-bold">{{ r.title }}</div>
+                                    <div class="text-warning small">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= r.rating %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-star text-muted"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if r.comment %}
+                                <p class="mb-2 text-secondary small">{{ r.comment|linebreaksbr }}</p>
+                                {% endif %}
+                                <div class="small text-muted">
+                                    By <strong>{{ r.reviewer.get_full_name|default:r.reviewer.username }}</strong> &bull; {{ r.created_at|date:"M d, Y" }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted italic">No reviews published yet for this expert.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Submit Review Form -->
+                <div class="col-lg-5">
+                    {% if user.is_authenticated %}
+                        {% if user != profile.user %}
+                        <div class="card border-0 bg-white shadow-sm p-3 rounded-3">
+                            <h3 class="h6 fw-bold mb-3">Write a Review</h3>
+                            <form method="post" action="{% url 'submit_review' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="expert_slug" value="{{ profile.slug }}">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Rating</label>
+                                    <select name="rating" class="form-select form-select-sm" required>
+                                        <option value="5">★★★★★ (5 Stars - Excellent)</option>
+                                        <option value="4">★★★★☆ (4 Stars - Very Good)</option>
+                                        <option value="3">★★★☆☆ (3 Stars - Average)</option>
+                                        <option value="2">★★☆☆☆ (2 Stars - Poor)</option>
+                                        <option value="1">★☆☆☆☆ (1 Star - Terrible)</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Review Title</label>
+                                    <input type="text" name="title" class="form-control form-control-sm" placeholder="Summary of project performance" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Detailed Comments</label>
+                                    <textarea name="comment" class="form-control form-control-sm" rows="3" placeholder="Technical expertise, domain knowledge, delivery..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-sm btn-primary w-100 fw-semibold">Submit Review</button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="p-3 bg-light rounded-3 text-center border">
+                            <p class="small text-muted mb-2">Want to submit a review?</p>
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-sm btn-outline-dark fw-semibold">Log In to Submit Review</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock %}

@@ -42,6 +42,11 @@ urlpatterns = [
         views.oem_dashboard,
         name="oem_dashboard",
     ),
+    path(
+        "oem/<slug:company_slug>/dashboard/",
+        views.oem_dashboard,
+        name="oem_dashboard_slug",
+    ),
 
     # ==========================================================
     # VENDOR DASHBOARD
@@ -52,6 +57,11 @@ urlpatterns = [
         views.vendor_dashboard,
         name="vendor_dashboard",
     ),
+    path(
+        "vendor/<slug:company_slug>/dashboard/",
+        views.vendor_dashboard,
+        name="vendor_dashboard_slug",
+    ),
     path("vendor/machines/", vendor_machine_management, name="vendor_machine_management"),
     path("vendor/machines/<int:machine_id>/", vendor_machine_management, name="edit_vendor_machine"),
     path("vendor/machines/<int:machine_id>/delete/", delete_vendor_machine, name="delete_vendor_machine"),
@@ -60,7 +70,7 @@ urlpatterns = [
     path("vendor/gallery/<int:photo_id>/delete/", delete_vendor_portfolio_item, name="delete_vendor_portfolio_item"),
 
     # ==========================================================
-    # ENGINEER DASHBOARD
+    # ENGINEER DASHBOARD & APPROVALS
     # ==========================================================
 
     path(
@@ -68,17 +78,56 @@ urlpatterns = [
         views.engineer_dashboard,
         name="engineer_dashboard",
     ),
-
-    # ==========================================================
-    # OEM CREATE MANUFACTURING REQUIREMENT
-    # ==========================================================
-
+    path(
+        "engineer/approve-vendor/<slug:company_slug>/",
+        views.approve_vendor,
+        name="approve_vendor",
+    ),
+    path(
+        "engineer/approve-oem/<slug:company_slug>/",
+        views.approve_oem,
+        name="approve_oem",
+    ),
+    path(
+        "engineer/approve-expert/<slug:company_slug>/",
+        views.approve_expert,
+        name="approve_expert",
+    ),
+    path(
+        "oems/<slug:slug>/",
+        views.public_oem_profile,
+        name="public_oem_profile",
+    ),
     path(
         "upload/",
         views.upload_job_view,
         name="upload_job",
     ),
-
+    path(
+        "oem/direct-rfq/<uuid:file_id>/bids/",
+        views.oem_direct_rfq_bids,
+        name="oem_direct_rfq_bids",
+    ),
+    path(
+        "oem/direct-rfq/<uuid:file_id>/award/<int:bid_id>/",
+        views.oem_award_direct_vendor,
+        name="oem_award_direct_vendor",
+    ),
+    path(
+        "engineer/requirement/<uuid:file_id>/invite-vendors/",
+        views.engineer_bulk_invite_vendors,
+        name="engineer_bulk_invite_vendors",
+    ),
+    path(
+        "engineer/requirement/<uuid:file_id>/resend-bidding-mail/",
+        views.resend_bidding_notification,
+        name="resend_bidding_notification",
+    ),
+    path(
+        "review/submit/",
+        views.submit_review,
+        name="submit_review",
+    ),
     # ==========================================================
     # NDA
     # ==========================================================

@@ -4,7 +4,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from users.models import VendorProfile
+from users.models import VendorProfile, OEMProfile, ExpertProfile
 
 from ..models import (
     CADModel,
@@ -41,13 +41,14 @@ def dashboard(request):
     return redirect("login")
 
 
+
 # ==============================================================
 # OEM DASHBOARD
 # ==============================================================
 
 
 @login_required
-def oem_dashboard(request):
+def oem_dashboard(request, company_slug=None):
 
     if (
         request.user.role != "OEM"
@@ -69,6 +70,8 @@ def oem_dashboard(request):
         .order_by("-uploaded_at")
     )
 
+    oem_profile, _ = OEMProfile.objects.get_or_create(user=request.user)
+
     # ----------------------------------------------------------
     # RENDER
     # ----------------------------------------------------------
@@ -78,6 +81,8 @@ def oem_dashboard(request):
         "exchange/oem_dashboard.html",
         {
             "jobs": jobs,
+            "oem_profile": oem_profile,
+            "company_slug": company_slug or oem_profile.slug,
         },
     )
 
@@ -88,7 +93,7 @@ def oem_dashboard(request):
 
 
 @login_required
-def vendor_dashboard(request):
+def vendor_dashboard(request, company_slug=None):
 
     if (
         request.user.role != "VENDOR"
@@ -126,11 +131,12 @@ def vendor_dashboard(request):
             .filter(
 
                 # ------------------------------------------------
-                # AVAILABLE REQUIREMENTS
+                # AVAILABLE REQUIREMENTS (OPEN OR TARGETED TO THIS VENDOR)
                 # ------------------------------------------------
 
-                Q(
-                    status="PUBLISHED"
+                (
+                    Q(status="PUBLISHED", targeted_vendors__isnull=True)
+                    | Q(status="PUBLISHED", targeted_vendors=request.user)
                 )
 
                 # ------------------------------------------------
@@ -234,6 +240,7 @@ def vendor_dashboard(request):
     # ----------------------------------------------------------
 
     public_profile_url = None
+    vendor_profile = None
     if not request.user.is_superuser:
         vendor_profile, _ = VendorProfile.objects.get_or_create(user=request.user)
         if vendor_profile.public_slug:
@@ -249,15 +256,8 @@ def vendor_dashboard(request):
             "my_bids": my_bids,
             "awarded_jobs": awarded_jobs,
             "public_profile_url": public_profile_url,
-
-            # --------------------------------------------------
-            # IMPORTANT
-            # --------------------------------------------------
-            # This makes notifications available to the
-            # vendor_dashboard.html template.
-            # --------------------------------------------------
-
-
+            "vendor_profile": vendor_profile,
+            "company_slug": company_slug or (vendor_profile.public_slug if vendor_profile else None),
         },
     )
 
@@ -270,10 +270,6 @@ def vendor_dashboard(request):
 @login_required
 def engineer_dashboard(request):
 
-    # ----------------------------------------------------------
-    # ENGINEER SECURITY
-    # ----------------------------------------------------------
-
     if (
         request.user.role != "ENGINEER"
         and not request.user.is_superuser
@@ -282,33 +278,11 @@ def engineer_dashboard(request):
             "Security Block: Restricted to Primexa staff engineers."
         )
 
-    # ----------------------------------------------------------
-    # ALL MANUFACTURING REQUIREMENTS
-    # ----------------------------------------------------------
-
     jobs = (
         CADModel.objects
         .all()
         .order_by("-uploaded_at")
     )
-
-    # ----------------------------------------------------------
-    # ACTIVE DELIVERY RISK ALERTS
-    # ----------------------------------------------------------
-    #
-    # Vendor submits:
-    #
-    #     DeliveryRiskAlert.status = OPEN
-    #
-    # Engineer sees:
-    #
-    #     OPEN
-    #     UNDER_REVIEW
-    #     RECOVERY_REQUESTED
-    #
-    # RESOLVED and ACCEPTED alerts are intentionally removed
-    # from the active-alert section.
-    # ----------------------------------------------------------
 
     delivery_risk_alerts = (
         DeliveryRiskAlert.objects
@@ -327,24 +301,6 @@ def engineer_dashboard(request):
         .order_by("-reported_at")
     )
 
-    # ----------------------------------------------------------
-    # ENGINEER NOTIFICATIONS
-    # ----------------------------------------------------------
-    #
-    # NotificationLog is used to provide the engineer with
-    # recent system notifications.
-    #
-    # Example:
-    #
-    # - Requirement submitted
-    # - Vendor bid
-    # - OEM approval
-    # - OEM rejection
-    # - FAI submitted
-    # - Delivery risk alert
-    #
-    # ----------------------------------------------------------
-
     notifications = (
         NotificationLog.objects
         .filter(
@@ -353,19 +309,43 @@ def engineer_dashboard(request):
         .order_by("-created_at")[:20]
     )
 
-    # ----------------------------------------------------------
-    # RENDER ENGINEER DASHBOARD
-    # ----------------------------------------------------------
+    from users.models import VendorProfile, OEMProfile, ExpertProfile, ServiceRequest
+
+    vendors = VendorProfile.objects.select_related("user").all().order_by("-id")
+    oems = OEMProfile.objects.select_related("user").all().order_by("-id")
+    experts = ExpertProfile.objects.select_related("user").all().order_by("-id")
+    service_requests = ServiceRequest.objects.select_related("submitted_by", "assigned_expert__user").all().order_by("-created_at")
+
+    pending_vendors = [v for v in vendors if not (v.is_verified and v.is_public_profile_approved)]
+    approved_vendors = [v for v in vendors if (v.is_verified and v.is_public_profile_approved)]
+
+    pending_oems = [o for o in oems if not (o.is_verified and o.is_approved)]
+    approved_oems = [o for o in oems if (o.is_verified and o.is_approved)]
+
+    pending_experts = [e for e in experts if not (e.is_verified and e.is_public_profile)]
+    approved_experts = [e for e in experts if (e.is_verified and e.is_public_profile)]
 
     return render(
         request,
         "exchange/engineer_dashboard.html",
         {
             "jobs": jobs,
+            "service_requests": service_requests,
             "delivery_risk_alerts": delivery_risk_alerts,
             "notifications": notifications,
+            "vendors": vendors,
+            "pending_vendors": pending_vendors,
+            "approved_vendors": approved_vendors,
+            "oems": oems,
+            "pending_oems": pending_oems,
+            "approved_oems": approved_oems,
+            "experts": experts,
+            "pending_experts": pending_experts,
+            "approved_experts": approved_experts,
         },
     )
+
+
 # ==============================================================
 # NOTIFICATIONS
 # ==============================================================
@@ -374,18 +354,8 @@ def engineer_dashboard(request):
 @login_required
 def notifications(request):
 
-    # ----------------------------------------------------------
-    # SECURITY
-    # ----------------------------------------------------------
-
-    if (
-        not request.user.is_authenticated
-    ):
+    if not request.user.is_authenticated:
         return redirect("login")
-
-    # ----------------------------------------------------------
-    # GET USER NOTIFICATIONS
-    # ----------------------------------------------------------
 
     user_notifications = (
         NotificationLog.objects
@@ -399,10 +369,6 @@ def notifications(request):
             "-created_at"
         )
     )
-
-    # ----------------------------------------------------------
-    # RENDER
-    # ----------------------------------------------------------
 
     return render(
         request,

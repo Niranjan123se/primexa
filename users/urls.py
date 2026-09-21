@@ -35,7 +35,16 @@ urlpatterns = [
     path("expert/dashboard/", views.expert_dashboard, name="expert_dashboard"),
     path("request-service/", views.request_service, name="request_service"),
     path("experts/", views.expert_directory, name="expert_directory"),
-    path("experts/<int:expert_id>/", views.public_expert_profile, name="public_expert_profile"),
+    path("experts/<slug:slug>/", views.public_expert_profile, name="public_expert_profile"),
+    path("experts/id/<int:expert_id>/", views.public_expert_profile, name="public_expert_profile_by_id"),
+    path("expert/photo/add/", views.add_expert_photo, name="add_expert_photo"),
+    path("expert/photo/<int:photo_id>/delete/", views.delete_expert_photo, name="delete_expert_photo"),
+    path("expert/certificate/add/", views.add_expert_certificate, name="add_expert_certificate"),
+    path("expert/certificate/<int:cert_id>/delete/", views.delete_expert_certificate, name="delete_expert_certificate"),
+    path("expert/request/<int:request_id>/respond/", views.expert_respond_service_request, name="expert_respond_service_request"),
+    path("engineer/bulk-invite-experts/", views.engineer_bulk_invite_experts, name="engineer_bulk_invite_experts"),
+    path("engineer/user/<int:user_id>/toggle-active/", views.toggle_user_active_status, name="toggle_user_active_status"),
+    path("engineer/user/<int:user_id>/delete/", views.delete_user_account, name="delete_user_account"),
 
     path(
         "terms-conditions/",
@@ -73,7 +82,8 @@ urlpatterns = [
         "password-reset/",
         auth_views.PasswordResetView.as_view(
             template_name="users/password_reset.html",
-            email_template_name="users/password_reset_email.html",
+            email_template_name="users/password_reset_email.txt",
+            html_email_template_name="users/password_reset_email.html",
             subject_template_name="users/password_reset_subject.txt",
             success_url="/password-reset/done/",
         ),

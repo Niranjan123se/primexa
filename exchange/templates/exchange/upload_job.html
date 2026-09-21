@@ -94,6 +94,41 @@
 
 
                     <h5 class="fw-bold border-bottom pb-3 mb-4 mt-5">
+                        Sourcing Workflow Choice
+                    </h5>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Choose Quotation & Sourcing Flow
+                        </label>
+                        {{ form.sourcing_flow }}
+                        {% if form.sourcing_flow.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.sourcing_flow.errors }}
+                        </div>
+                        {% endif %}
+                        <div class="form-text mt-2">
+                            <strong>Primexa Managed:</strong> Primexa engineers manage supplier selection, FAI, quality inspection, and issue a final consolidated quote.<br>
+                            <strong>Direct Network RFQ:</strong> Requirement publishes immediately to registered vendors so you get direct quotations straight from the network.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Target Specific Vendor(s) (Optional)
+                        </label>
+                        {{ form.targeted_vendors }}
+                        {% if form.targeted_vendors.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.targeted_vendors.errors }}
+                        </div>
+                        {% endif %}
+                        <div class="form-text mt-1">
+                            <strong>Direct RFQ Limit:</strong> OEMs can select 1 specific vendor or up to 5 vendors from the list (Hold Ctrl/Cmd to select multiple). Leave blank to publish to all open vendors.
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold border-bottom pb-3 mb-4 mt-5">
                         Manufacturing Requirement
                     </h5>
 

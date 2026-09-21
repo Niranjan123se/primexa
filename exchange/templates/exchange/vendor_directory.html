@@ -25,30 +25,75 @@
             <div class="col-md-4"><label class="form-label" for="id_certification">Certification</label><select class="form-select" id="id_certification" name="certification"><option value="">Any certification</option>{% for value, label in filter_options.certifications %}<option value="{{ value }}" {% if filters.certification == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
             <div class="col-md-4"><label class="form-label" for="id_industry">Industry</label><select class="form-select" id="id_industry" name="industry"><option value="">Any industry</option>{% for value, label in filter_options.industries %}<option value="{{ value }}" {% if filters.industry == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
             <div class="col-md-4"><label class="form-label" for="id_availability">Capacity</label><select class="form-select" id="id_availability" name="availability"><option value="">Any capacity</option><option value="open_to_subcontract" {% if filters.availability == "open_to_subcontract" %}selected{% endif %}>Open to subcontracting</option></select></div>
+            <div class="col-md-4"><label class="form-label" for="id_per_page">Results Per Page</label><select class="form-select" id="id_per_page" name="per_page"><option value="6" {% if per_page == 6 %}selected{% endif %}>6 per page</option><option value="9" {% if per_page == 9 %}selected{% endif %}>9 per page</option><option value="12" {% if per_page == 12 %}selected{% endif %}>12 per page</option><option value="18" {% if per_page == 18 %}selected{% endif %}>18 per page</option><option value="36" {% if per_page == 36 %}selected{% endif %}>36 per page</option></select></div>
             <div class="col-md-4 d-flex align-items-end"><div class="form-check mb-2"><input class="form-check-input" type="checkbox" value="1" id="id_verified" name="verified" {% if filters.verified %}checked{% endif %}><label class="form-check-label" for="id_verified">Verified vendors only</label></div></div>
         </div>
-        <div class="d-flex gap-2 mt-4"><button class="btn btn-dark px-4" type="submit">Apply filters</button><a class="btn btn-outline-secondary" href="{% url 'vendor_directory' %}">Clear</a></div>
+        <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-dark px-4 fw-semibold" type="submit">Apply filters</button>
+            <a class="btn btn-outline-primary fw-semibold" href="{% url 'vendor_directory' %}">Show All Vendors</a>
+            <a class="btn btn-outline-secondary" href="{% url 'vendor_directory' %}">Clear Filters</a>
+        </div>
     </div>
 </form>
 
 <section>
-    <div class="d-flex justify-content-between align-items-baseline mb-3"><h2 class="h3 fw-bold">Matched vendors</h2><span class="text-muted">{{ profiles|length }} result{{ profiles|length|pluralize }}</span></div>
+    <div class="d-flex justify-content-between align-items-baseline mb-3">
+        <h2 class="h3 fw-bold mb-0">Matched vendors</h2>
+        <span class="text-muted">Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total_count }} vendor{{ total_count|pluralize }}</span>
+    </div>
+
     {% if profiles %}
-    <div class="row g-4">
+    <div class="row g-4 mb-4">
         {% for profile in profiles %}
         <article class="col-md-6 col-xl-4"><div class="card h-100 border-0 shadow-sm rounded-4"><div class="card-body p-4 d-flex flex-column">
             <div class="d-flex justify-content-between gap-2 mb-2"><h3 class="h5 fw-bold mb-0">{{ profile.user.company_name }}</h3>{% if profile.is_verified %}<span class="badge bg-success align-self-start">Verified</span>{% endif %}</div>
-            <p class="text-muted small">{{ profile.industrial_area }}{% if profile.industrial_area and profile.city %}, {% endif %}{{ profile.city }}</p>
+            <p class="text-muted small mb-2">{{ profile.industrial_area }}{% if profile.industrial_area and profile.city %}, {% endif %}{{ profile.city }}</p>
             {% if profile.match_score %}<p class="small text-success mb-2">{{ profile.match_score }}% of selected filters matched</p>{% endif %}
             {% if profile.process_capabilities.all %}<p class="small mb-2"><strong>Processes:</strong> {% for process in profile.process_capabilities.all %}{{ process.get_process_type_display }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
             {% if profile.machines.all %}<p class="small mb-2"><strong>Machines:</strong> {% for machine in profile.machines.all %}{{ machine.machine_name }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
             {% if profile.materials.all %}<p class="small mb-3"><strong>Materials:</strong> {% for material in profile.materials.all %}{{ material.get_material_type_display }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
-            <a href="{% url 'public_vendor_profile' profile.public_slug %}" class="btn btn-outline-dark mt-auto">View profile</a>
+            <a href="{% url 'public_vendor_profile' profile.public_slug|default:profile.user.username %}" class="btn btn-outline-dark mt-auto">View profile</a>
         </div></div></article>
         {% endfor %}
     </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="d-flex justify-content-center mt-4" aria-label="Vendor pagination">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link text-dark" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            {% for p in page_obj.paginator.page_range %}
+                {% if page_obj.number == p %}
+                    <li class="page-item active"><span class="page-link bg-dark border-dark">{{ p }}</span></li>
+                {% elif p > page_obj.number|add:"-3" and p < page_obj.number|add:"3" %}
+                    <li class="page-item"><a class="page-link text-dark" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ p }}">{{ p }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link text-dark" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
     {% else %}
-    <div class="card border-0 shadow-sm rounded-4"><div class="card-body text-center py-5"><h3 class="h5 fw-bold">No vendors match these filters</h3><p class="text-muted mb-0">Try removing a filter or broadening the location.</p></div></div>
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-funnel-fill fs-1 text-muted d-block mb-3"></i>
+            <h3 class="h5 fw-bold mb-2">No vendors match these filters</h3>
+            <p class="text-muted mb-4">Try removing a filter or broadening your search parameters to discover network vendors.</p>
+            <a href="{% url 'vendor_directory' %}" class="btn btn-primary fw-semibold px-4 py-2">
+                <i class="bi bi-grid-fill me-2"></i>Show All Vendors
+            </a>
+        </div>
+    </div>
     {% endif %}
 </section>
 {% endblock %}

@@ -353,7 +353,7 @@ EMAIL_HOST_USER = os.getenv("PRIMEXA_EMAIL_USER", "no-reply@primexaglobal.com")
 # Do NOT use the password previously exposed in the chat.
 # Change the mailbox password in Hostinger first.
 #
-EMAIL_HOST_PASSWORD = os.getenv("PRIMEXA_EMAIL_PASSWORD", "")
+EMAIL_HOST_PASSWORD = os.getenv("PRIMEXA_EMAIL_PASSWORD", "Wqwertyuiop@1234567890")
 
 
 # ----------------------------------------------------------
