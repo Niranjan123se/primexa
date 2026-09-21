@@ -1,0 +1,4 @@
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home9/primexag/
+    - /bin/cp * $DEPLOYPATH
