@@ -1,4 +1,4 @@
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/primexag/public_html/
+    - export DEPLOYPATH=/home9/primexag/
     - /bin/cp * $DEPLOYPATH
