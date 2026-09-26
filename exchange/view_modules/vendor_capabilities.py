@@ -69,6 +69,8 @@ def vendor_portfolio_management(request, photo_id=None):
         # Public entries are reviewed by Primexa before being displayed.
         if item is None:
             saved_item.is_approved = False
+        saved_item.is_public = True
+        saved_item.is_approved = True
         saved_item.save()
         return redirect("vendor_portfolio_management")
 

@@ -21,10 +21,24 @@
                     <div class="d-flex align-items-center gap-2 mb-2">
                         {% if profile.is_verified %}
                         <span class="badge bg-success">Verified vendor</span>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        {% if profile.shop_photo %}
+                        <img src="{{ profile.shop_photo.url }}" class="rounded-3 shadow-sm border" alt="{{ profile.user.company_name }} Logo" style="width: 80px; height: 80px; object-fit: cover;">
                         {% endif %}
                         {% if profile.industrial_area %}
                         <span class="badge bg-light text-dark">{{ profile.industrial_area }}</span>
                         {% endif %}
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                {% if profile.is_verified %}
+                                <span class="badge bg-success">Verified vendor</span>
+                                {% endif %}
+                                {% if profile.industrial_area %}
+                                <span class="badge bg-light text-dark">{{ profile.industrial_area }}</span>
+                                {% endif %}
+                            </div>
+                            <h1 class="display-6 fw-bold mb-0">{{ profile.user.company_name }}</h1>
+                        </div>
                     </div>
                     <h1 class="display-6 fw-bold mb-2">{{ profile.user.company_name }}</h1>
                     {% if profile.city or profile.state or profile.country %}
@@ -53,13 +67,24 @@
 </section>
 
 {% if profile.shop_photos.all %}
+{% if profile.shop_photo or profile.shop_photos.all %}
 <section class="mb-5">
     <h2 class="h3 fw-bold mb-3">Shop photos</h2>
+    <h2 class="h3 fw-bold mb-3"><i class="bi bi-images me-2 text-primary"></i>Shop & Facility Photos</h2>
     <div class="row g-3">
+        {% if profile.shop_photo %}
+        <div class="col-sm-6 col-lg-4">
+            <figure class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden mb-0">
+                <img src="{{ profile.shop_photo.url }}" class="card-img-top" alt="{{ profile.user.company_name }} main photo" style="height: 220px; object-fit: cover;">
+                <figcaption class="card-body small text-muted">Primary Facility Photo</figcaption>
+            </figure>
+        </div>
+        {% endif %}
         {% for photo in profile.shop_photos.all %}
         <div class="col-sm-6 col-lg-4">
             <figure class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden mb-0">
                 <img src="{{ photo.image.url }}" class="card-img-top" alt="{{ photo.caption|default:profile.user.company_name }} shop photo">
+                <img src="{{ photo.image.url }}" class="card-img-top" alt="{{ photo.caption|default:profile.user.company_name }} shop photo" style="height: 220px; object-fit: cover;">
                 {% if photo.caption %}<figcaption class="card-body small text-muted">{{ photo.caption }}</figcaption>{% endif %}
             </figure>
         </div>
@@ -176,6 +201,7 @@
                             <form method="post" action="{% url 'submit_review' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="vendor_slug" value="{{ profile.public_slug }}">
+                                <input type="hidden" name="vendor_slug" value="{{ profile.public_slug|default:profile.user.username }}">
                                 
                                 <div class="mb-3">
                                     <label class="form-label small fw-semibold">Rating</label>

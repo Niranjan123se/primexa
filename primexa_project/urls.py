@@ -50,11 +50,18 @@ urlpatterns = [
 ]
 # ==============================================================
 # DEVELOPMENT MEDIA FILES
+# MEDIA FILES SERVING (DEVELOPMENT & PRODUCTION / CPANEL)
 # ==============================================================
 
 if settings.DEBUG:
+from django.views.static import serve
+from django.urls import re_path
 
     urlpatterns += static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT,
     )
+urlpatterns += [
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+]
+

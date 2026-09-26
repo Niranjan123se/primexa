@@ -13,3 +13,4 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "primexa_project.settings")
 
 # Import WSGI handler
 from primexa_project.wsgi import application
+

@@ -2025,6 +2025,8 @@ class VendorShopPhoto(models.Model):
     display_order = models.PositiveIntegerField(default=0)
     is_public = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
+    is_approved = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

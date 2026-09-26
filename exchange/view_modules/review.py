@@ -32,8 +32,16 @@ def submit_review(request):
     oem_slug = request.POST.get("oem_slug")
     expert_slug = request.POST.get("expert_slug")
 
+    from django.db.models import Q
+
     if vendor_slug:
         vendor_profile = get_object_or_404(VendorProfile.objects.select_related("user"), public_slug=vendor_slug)
+        vendor_profile = VendorProfile.objects.select_related("user").filter(
+            Q(public_slug=vendor_slug) | Q(user__username=vendor_slug) | Q(vendor_id_code=vendor_slug)
+        ).first()
+        if not vendor_profile:
+            messages.error(request, "Target vendor profile not found.")
+            return redirect(redirect_url)
         if vendor_profile.user == request.user:
             messages.error(request, "Security Block: You cannot write a review for your own business profile.")
             return redirect(redirect_url)
@@ -43,11 +51,18 @@ def submit_review(request):
             rating=rating,
             title=title,
             comment=comment,
+            is_approved=True,
         )
         messages.success(request, f"Thank you! Your review for '{vendor_profile.user.company_name}' has been published.")
 
     elif oem_slug:
         oem_profile = get_object_or_404(OEMProfile.objects.select_related("user"), slug=oem_slug)
+        oem_profile = OEMProfile.objects.select_related("user").filter(
+            Q(slug=oem_slug) | Q(user__username=oem_slug)
+        ).first()
+        if not oem_profile:
+            messages.error(request, "Target OEM profile not found.")
+            return redirect(redirect_url)
         if oem_profile.user == request.user:
             messages.error(request, "Security Block: You cannot write a review for your own business profile.")
             return redirect(redirect_url)
@@ -57,11 +72,18 @@ def submit_review(request):
             rating=rating,
             title=title,
             comment=comment,
+            is_approved=True,
         )
         messages.success(request, f"Thank you! Your review for '{oem_profile.user.company_name}' has been published.")
 
     elif expert_slug:
         expert_profile = get_object_or_404(ExpertProfile.objects.select_related("user"), slug=expert_slug)
+        expert_profile = ExpertProfile.objects.select_related("user").filter(
+            Q(slug=expert_slug) | Q(user__username=expert_slug)
+        ).first()
+        if not expert_profile:
+            messages.error(request, "Target expert profile not found.")
+            return redirect(redirect_url)
         if expert_profile.user == request.user:
             messages.error(request, "Security Block: You cannot write a review for your own profile.")
             return redirect(redirect_url)
@@ -71,6 +93,7 @@ def submit_review(request):
             rating=rating,
             title=title,
             comment=comment,
+            is_approved=True,
         )
         name = expert_profile.user.get_full_name() or expert_profile.user.username
         messages.success(request, f"Thank you! Your review for expert '{name}' has been published.")
